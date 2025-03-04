@@ -5,6 +5,7 @@
 from . import tools
 
 import os
+from typing import Union
 
 
 def chirps_to_parquet(dir: str, admin_level: int, to: str, gadm_version: str = "v410"):
@@ -191,7 +192,10 @@ def persiann_to_parquet(
 
 
 def clim_to_parquet(
-    dir: str, admin_level: int, dir_to: str, gadm_version: str = "v410"
+    dir: str,
+    dir_to: str,
+    admin_level: Union[int, list] = [0],
+    gadm_version: str = "v410",
 ):
     """
     Convert country climate data to a Parquet file.
@@ -202,15 +206,30 @@ def clim_to_parquet(
         Path to the data directory.
     dir_to: str
         Path to the output directory.
-    admin_level : int
-        GADM admin level as a single integer.
+    admin_level : list
+        GADM admin level as an integer or a list of integers.
     gadm_version : str
         GADM version as a string. Default is "v410" for v4.1.0.
     """
 
-    # file names
-    chirps_file = "chirps_admin_" + str(admin_level) + ".parquet"
-    era5mean_file = "era5mean_admin_" + str(admin_level) + ".parquet"
+    # convert admin level to list
+    if isinstance(admin_level, int):
+        admin_level = [admin_level]
 
-    chirps_to_parquet(dir, admin_level, chirps_file, gadm_version)
-    era5mean_to_parquet(dir, admin_level, era5mean_file, gadm_version)
+    for i in admin_level:
+        chirps_file = tools._make_output_names("CHIRPS", i)
+        era5mean_file = tools._make_output_names("ERA5_mean", i)
+        era5max_file = tools._make_output_names("ERA5_max", i)
+        era5min_file = tools._make_output_names("ERA5_min", i)
+        era5rh_file = tools._make_output_names("ERA5_RH", i)
+        era5sh_file = tools._make_output_names("ERA5_SH", i)
+        persiann_file = tools._make_output_names("PERSIANN", i)
+
+        chirps_to_parquet(dir, i, os.path.join(dir_to, chirps_file), gadm_version)
+        era5mean_to_parquet(dir, i, os.path.join(dir_to, era5mean_file), gadm_version)
+        era5max_to_parquet(dir, i, os.path.join(dir_to, era5max_file), gadm_version)
+        era5min_to_parquet(dir, i, os.path.join(dir_to, era5min_file), gadm_version)
+        era5rh_to_parquet(dir, i, os.path.join(dir_to, era5rh_file), gadm_version)
+        era5sh_to_parquet(dir, i, os.path.join(dir_to, era5sh_file), gadm_version)
+        persiann_to_parquet(dir, i, os.path.join(dir_to, persiann_file), gadm_version)
+
