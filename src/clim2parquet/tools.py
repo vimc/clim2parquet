@@ -41,6 +41,33 @@ def _find_clim_files(
     return files
 
 
+def _make_output_names(data_source: str, admin_level: int):
+    """
+    Make output file names for a given data source and GADM admin level.
+    """
+    data_output_name = ""
+
+    match data_source:
+        case "CHIRPS":
+            data_output_name = "chirps"
+        case "ERA5_mean":
+            data_output_name = "era5mean"
+        case "ERA5_max":
+            data_output_name = "era5max"
+        case "ERA5_min":
+            data_output_name = "era5min"
+        case "ERA5_RH":
+            data_output_name = "era5rh"
+        case "ERA5_SH":
+            data_output_name = "era5sh"
+        case "PERSIANN":
+            data_output_name = "persiann"
+        case _:
+            data_output_name = "unknown"  # should never get to this
+
+    return data_output_name + "_admin_" + str(admin_level) + ".parquet"
+
+
 def _files_to_parquet(files: list, to: str):
     """
     Convert country data to a Parquet file.
