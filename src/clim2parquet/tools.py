@@ -8,7 +8,15 @@ import re
 
 
 def _get_data_info() -> pd.DataFrame:
-    """Loads the default dataset from the package data directory into a Pandas DataFrame."""
+    """
+    Loads the default dataset from the package data directory into a Pandas DataFrame.
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame with the data source names, regex patterns, and output names.
+        Data version information will be included in future.
+    """
     with (
         importlib.resources.files("clim2parquet.data")
         .joinpath("data_sources.csv")
@@ -20,6 +28,10 @@ def _get_data_info() -> pd.DataFrame:
 def _get_level_pattern(admin_level: int, gadm_version: str = "v410"):
     """
     Get file naming pattern for a GADM admin level.
+
+    Returns
+    -------
+    A string for a regex pattern to search for files at a specific admin level.
     """
     return gadm_version + "_" + "\\d+_" * (admin_level + ((admin_level > 0) * 1))
 
@@ -27,6 +39,10 @@ def _get_level_pattern(admin_level: int, gadm_version: str = "v410"):
 def _get_files_size(files: list):
     """
     Get the total size of a list of files in megabytes.
+
+    Returns
+    -------
+    A float representing the total size of the files in megabytes.
     """
     size = 0
     for f in files:
@@ -39,7 +55,24 @@ def _find_clim_files(
 ):
     """
     Find climate data files for a given GADM admin level and data source.
-    Prints the number of files found and their total size to the console.
+
+    Parameters
+    ----------
+    dir : str
+        Path to the directory containing the data files.
+    data_source : str
+        The data source name. See available data sources in `get_data_names()`.
+    admin_level : int
+        GADM admin level as an integer. Must be in the range 0 -- 3.
+    gadm_version : str
+        GADM version as a string. Default is "v410" for v4.1.0. No other
+        versions are currently supported.
+
+    Returns
+    -------
+    A list of file paths corresponding to data for the given data source and
+        admin level. Prints the number of files found and their total size
+        to the console as a side effect.
     """
     files = os.listdir(dir)
 
@@ -64,6 +97,10 @@ def _find_clim_files(
 def _gadm_levels():
     """
     Supported GADM admin levels.
+
+    Returns
+    -------
+    A list of integers representing the supported GADM admin levels.
     """
     return [0, 1, 2, 3]
 
@@ -75,16 +112,20 @@ def _gadm_versions():
     return ["v410"]
 
 
-def _get_data_names():
-    """
-    Get data source names.
-    """
-    return _get_data_info()["data_source"].tolist()
-
-
 def _make_output_names(data_source: str, admin_level: int):
     """
     Make output file names for a given data source and GADM admin level.
+
+    Parameters
+    ----------
+    data_source : str
+        The data source name. See available data sources in `get_data_names()`.
+    admin_level : int
+        GADM admin level as an integer. Must be in the range 0 -- 3.
+
+    Returns
+    -------
+    A string for the output file name.
     """
     data_info = _get_data_info()
     data_output_name = data_info.loc[
@@ -104,6 +145,10 @@ def _files_to_parquet(files: list, to: str):
         List of data files, assumed to be CSVs.
     to : str
         Path and filename to output the data.
+
+    Returns
+    -------
+    None. Called only for the side effect of converting CSV data files to Parquet.
     """
     data_list = []
     for file in files:
