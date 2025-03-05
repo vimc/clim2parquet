@@ -2,8 +2,8 @@ import importlib.resources
 import os
 
 import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
+import pyarrow as pa  # type: ignore
+import pyarrow.parquet as pq  # type: ignore
 import re
 
 
@@ -20,8 +20,8 @@ def _get_data_info() -> pd.DataFrame:
     with (
         importlib.resources.files("clim2parquet.data")
         .joinpath("data_sources.csv")
-        .open("r", encoding="utf-8") as f
-    ):
+        .open("r", encoding="utf-8")
+    ) as f:
         return pd.read_csv(f, dtype=str)
 
 
@@ -33,7 +33,9 @@ def _get_level_pattern(admin_level: int, gadm_version: str = "v410"):
     -------
     A string for a regex pattern to search for files at a specific admin level.
     """
-    return gadm_version + "_" + "\\d+_" * (admin_level + ((admin_level > 0) * 1))
+    return (
+        gadm_version + "_" + "\\d+_" * (admin_level + ((admin_level > 0) * 1))
+    )
 
 
 def _get_files_size(files: list):
@@ -89,7 +91,9 @@ def _find_clim_files(
         print(f"Warning: Found no {data_source} files under `{dir}`!")
     else:
         files_size = _get_files_size(files)
-        print(f"Found {len(files)} files with a total size of {files_size:.2f} MB.")
+        print(
+            f"Found {len(files)} files with a total size of {files_size:.2f} MB."
+        )
 
     return files
 

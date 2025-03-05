@@ -15,7 +15,9 @@ def test_clim_to_parquet():
     admin_level = 0
     with tempfile.TemporaryDirectory() as temp_dir:
         # admin level defaults to 0
-        clim2parquet.clim_to_parquet("CHIRPS", "tests/test-data/country_A/", temp_dir)
+        clim2parquet.clim_to_parquet(
+            "CHIRPS", "tests/test-data/country_A/", temp_dir
+        )
 
         file_name = clim2parquet.tools._make_output_names("CHIRPS", admin_level)
 
@@ -28,7 +30,9 @@ def test_clim_to_parquet():
             "ERA5_mean", "tests/test-data/country_A/", temp_dir
         )
 
-        file_name = clim2parquet.tools._make_output_names("ERA5_mean", admin_level)
+        file_name = clim2parquet.tools._make_output_names(
+            "ERA5_mean", admin_level
+        )
 
         f = os.path.join(temp_dir, file_name)
         assert os.path.exists(f)
@@ -46,7 +50,8 @@ def test_multiclim_to_parquet():
         )
 
         file_names = [
-            clim2parquet.tools._make_output_names(d, admin_level) for d in data_sources
+            clim2parquet.tools._make_output_names(d, admin_level)
+            for d in data_sources
         ]
 
         for f in file_names:
@@ -79,7 +84,9 @@ def test_clim_to_parquet_errors():
 
     excess_admin_level = 99
     with pytest.raises(ValueError, match=r"One or more of `admin_level`"):
-        clim2parquet.clim_to_parquet("CHIRPS", ".", ".", admin_level=excess_admin_level)
+        clim2parquet.clim_to_parquet(
+            "CHIRPS", ".", ".", admin_level=excess_admin_level
+        )
 
     bad_gadm_version = "v4"
     with pytest.raises(ValueError, match=r"GADM version not available"):
@@ -89,7 +96,9 @@ def test_clim_to_parquet_errors():
     data_sources = "PERSIANN"  # PERSIANN data not included at GADM level 1
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        clim2parquet.clim_to_parquet(data_sources, "tests/test-data/country_A", ".", 1)
+        clim2parquet.clim_to_parquet(
+            data_sources, "tests/test-data/country_A", ".", 1
+        )
         assert len(w) == 1
         assert issubclass(w[-1].category, Warning)
         assert "No files found" in str(w[-1].message)
