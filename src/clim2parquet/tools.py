@@ -1,9 +1,20 @@
+import importlib.resources
 import os
 
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import re
+
+
+def _get_data_info() -> pd.DataFrame:
+    """Loads the default dataset from the package data directory into a Pandas DataFrame."""
+    with (
+        importlib.resources.files("clim2parquet.data")
+        .joinpath("data_sources.csv")
+        .open("r", encoding="utf-8") as f
+    ):
+        return pd.read_csv(f, dtype=str)
 
 
 def _get_level_pattern(admin_level: int, gadm_version: str = "v410"):
@@ -31,46 +42,61 @@ def _find_clim_files(
     Prints the number of files found and their total size to the console.
     """
     files = os.listdir(dir)
-    pattern = _get_level_pattern(admin_level, gadm_version) + data_source
+
+    # get regex to search directory for data files
+    data_info = _get_data_info()
+    data_pattern = data_info.loc[
+        data_info["data_source"] == data_source, "data_regex"
+    ].item()
+
+    pattern = _get_level_pattern(admin_level, gadm_version) + data_pattern
     files = [os.path.join(dir, f) for f in files if re.search(pattern, f)]
 
-    # Print file count and total size
-    files_size = _get_files_size(files)
-    print(f"Found {len(files)} files with a total size of {files_size:.2f} MB.")
+    if len(files) == 0:
+        print(f"Warning: Found no {data_source} files under `{dir}`!")
+    else:
+        files_size = _get_files_size(files)
+        print(f"Found {len(files)} files with a total size of {files_size:.2f} MB.")
 
     return files
+
+
+def _gadm_levels():
+    """
+    Supported GADM admin levels.
+    """
+    return [0, 1, 2, 3]
+
+
+def _gadm_versions():
+    """
+    Supported GADM version strings.
+    """
+    return ["v410"]
+
+
+def _get_data_names():
+    """
+    Get data source names.
+    """
+    return _get_data_info()["data_source"].tolist()
 
 
 def _make_output_names(data_source: str, admin_level: int):
     """
     Make output file names for a given data source and GADM admin level.
     """
-    data_output_name = ""
-
-    match data_source:
-        case "CHIRPS":
-            data_output_name = "chirps"
-        case "ERA5_mean":
-            data_output_name = "era5mean"
-        case "ERA5_max":
-            data_output_name = "era5max"
-        case "ERA5_min":
-            data_output_name = "era5min"
-        case "ERA5_RH":
-            data_output_name = "era5rh"
-        case "ERA5_SH":
-            data_output_name = "era5sh"
-        case "PERSIANN":
-            data_output_name = "persiann"
-        case _:
-            data_output_name = "unknown"  # should never get to this
+    data_info = _get_data_info()
+    data_output_name = data_info.loc[
+        data_info["data_source"] == data_source, "data_output_name"
+    ].item()
 
     return data_output_name + "_admin_" + str(admin_level) + ".parquet"
 
 
 def _files_to_parquet(files: list, to: str):
     """
-    Convert country data to a Parquet file.
+    Convert country data from CSV to Parquet file.
 
     Parameters
     ----------
