@@ -5,13 +5,13 @@ build-backend = "hatchling.build"
 [project]
 name = "clim2parquet"
 version = "0.0.1"
-description = ''
+description = 'Converts climate data CSVs to parquet format'
 readme = "README.md"
 requires-python = ">=3.8"
 license = "MIT"
 keywords = []
 authors = [
-  { name = "Pratik Gupte", email = "pratikgupte16@gmail.com" },
+  { name = "Pratik Gupte", email = "p.gupte24@imperial.ac.uk" },
 ]
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -33,19 +33,59 @@ dependencies = [
 ]
 
 [project.urls]
-Documentation = "https://github.com/Pratik Gupte/clim2parquet#readme"
-Issues = "https://github.com/Pratik Gupte/clim2parquet/issues"
-Source = "https://github.com/Pratik Gupte/clim2parquet"
+Documentation = "https://github.com/vimc/clim2parquet#readme"
+Issues = "https://github.com/vimc/clim2parquet/issues"
+Source = "https://github.com/vimc/clim2parquet"
 
 [tool.hatch.version]
 path = "src/clim2parquet/__about__.py"
 
-[tool.hatch.envs.types]
-extra-dependencies = [
-  "mypy>=1.0.0",
+[tool.hatch.envs.default]
+dependencies = [
+  "pytest",
 ]
-[tool.hatch.envs.types.scripts]
-check = "mypy --install-types --non-interactive {args:src/clim2parquet tests}"
+
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=taskwait --cov=tests {args}"
+no-cov = "cov --no-cov {args}"
+cov-report-xml = [
+  "- coverage combine",
+  "coverage xml",
+]
+cov-ci = [
+  "test-cov",
+  "cov-report-xml",
+]
+
+
+[[tool.hatch.envs.all.matrix]]
+python = ["3.10", "3.11", "3.12", "3.13"]
+
+[tool.hatch.envs.lint]
+extra-dependencies = [
+  "black>=23.1.0",
+  "mypy>=1.0.0",
+  "ruff>=0.0.243",
+  "types-defusedxml",
+]
+
+[tool.hatch.envs.lint.scripts]
+typing = "mypy --install-types --non-interactive {args:src tests}"
+style = [
+  "ruff check {args:.}",
+   "black --check --diff {args:.}",
+]
+fmt = [
+  "black {args:.}",
+  "ruff check --fix {args:.}",
+  "style",
+]
+all = [
+  "style",
+  "typing",
+]
 
 [tool.coverage.run]
 source_pkgs = ["clim2parquet", "tests"]
@@ -65,3 +105,17 @@ exclude_lines = [
   "if __name__ == .__main__.:",
   "if TYPE_CHECKING:",
 ]
+
+[tool.black]
+line-length = 80
+skip-string-normalization = true
+
+[tool.ruff]
+line-length = 80
+
+[tool.ruff.lint.per-file-ignores]
+# Tests can use magic values, assertions, and relative imports
+"tests/**/*" = ["PLR2004", "S101", "TID252"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
