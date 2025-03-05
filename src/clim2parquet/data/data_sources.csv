@@ -1,0 +1,8 @@
+data_source,data_version,data_regex,data_output_name
+CHIRPS,,"CHIRPS",chirps
+ERA5_mean,,"ERA5_Land_2m_temperature_\d{4}",era5mean
+ERA5_min,,"ERA5_Land_2m_temperature_daymin,"era5min
+ERA5_max,,"ERA5_Land_2m_temperature_daymax,"era5max
+ERA5_RH,,"ERA5_Land_relative_humidity,"era5rh
+ERA5_SH,,"ERA5_Land_specific_humidity,"era5sh
+PERSIANN,,"PERSIANN,"persiann
