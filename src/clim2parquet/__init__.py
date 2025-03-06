@@ -2,14 +2,20 @@
 #
 # SPDX-License-Identifier: MIT
 
-from . import tools
+"""
+Convert country climate data to Parquet files.
+
+This package provides functionality to find and convert country climate data,
+assumed to be stored as CSVs, to Parquet files.
+"""
 
 import os
-from typing import Union
-import warnings
+from typing import Optional
+
+from . import tools
 
 
-def get_data_names():
+def get_data_names() -> list[str]:
     """
     Get data source names.
 
@@ -21,13 +27,13 @@ def get_data_names():
     return tools._get_data_info()["data_source"].tolist()
 
 
-def clim_to_parquet(
-    data_source: Union[str, list],
+def clim_to_parquet(  # noqa: C901
+    data_source: str | list[str],
     dir_from: str,
     dir_to: str,
-    admin_level: Union[int, list] = [0],
+    admin_level: Optional[int] | Optional[list[int]] = None,
     gadm_version: str = "v410",
-):
+) -> None:
     """
     Convert country climate data to a Parquet file.
 
@@ -42,7 +48,7 @@ def clim_to_parquet(
         Path to the output directory where Parquet files will be saved.
     admin_level : list
         GADM admin level as an integer or a list of integers. May have values
-        in the range 0 -- 3.
+        in the range 0 -- 3. Defaults to 0 indicating country level data.
     gadm_version : str
         GADM version as a string. Default is "v410" for v4.1.0. No other
         versions are currently supported.
@@ -52,38 +58,37 @@ def clim_to_parquet(
     None. Called only for the side effect of converting CSV data files to
     Parquet.
     """
-
     # convert inputs to lists
+    if admin_level is None:
+        admin_level = [0]
     if isinstance(admin_level, int):
         admin_level = [admin_level]
-
     if isinstance(data_source, str):
         data_source = [data_source]
 
     # input checking
-    if not all([d in get_data_names() for d in data_source]):
-        raise ValueError(
-            "One or more of `data_source` are not available. \
+    if not all(d in get_data_names() for d in data_source):
+        err_bad_clim = "One or more of `data_source` are not available. \
             Run `get_data_names()` to get available data names."
-        )
+        raise ValueError(err_bad_clim)
 
-    if not all([i in tools._gadm_levels() for i in admin_level]):
-        raise ValueError(
-            "One or more of `admin_level` are not available. \
+    if not all(i in tools._gadm_levels() for i in admin_level):
+        err_bad_admin = "One or more of `admin_level` are not available. \
             Supported levels are: 0, 1, 2, 3."
-        )
+        raise ValueError(err_bad_admin)
 
     if gadm_version not in tools._gadm_versions():
-        raise ValueError(
-            "GADM version not available. Only version 4.1.0 is\
+        err_bad_gadm = "GADM version not available. Only version 4.1.0 is\
             supported, and is specified as 'v410'."
-        )
+        raise ValueError(err_bad_gadm)
 
     if not os.path.exists(dir_from):
-        raise Exception("Data source directory `dir_from` not found.")
+        err_no_from = "Data source directory `dir_from` not found."
+        raise Exception(err_no_from)
 
     if not os.path.exists(dir_to):
-        raise Exception("Data output directory `dir_to` not found.")
+        err_no_dest = "Data output directory `dir_to` not found."
+        raise Exception(err_no_dest)
 
     # currently offering only data source and admin level combinations
     for d in data_source:

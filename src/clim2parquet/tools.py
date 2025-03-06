@@ -1,21 +1,25 @@
+"""Tools to find and convert climate data files from CSV to parquet."""
+
 import importlib.resources
+import logging
 import os
+import re
+import warnings
 
 import pandas as pd
 import pyarrow as pa  # type: ignore
 import pyarrow.parquet as pq  # type: ignore
-import re
 
 
 def _get_data_info() -> pd.DataFrame:
     """
-    Loads the default dataset from the package data directory into a Pandas DataFrame.
+    Get climate data source information as a Pandas DataFrame.
 
     Returns
     -------
     pd.DataFrame
-        A DataFrame with the data source names, regex patterns, and output names.
-        Data version information will be included in future.
+        A DataFrame with the data source names, regex patterns, and output
+        names. Data version information will be included in future.
     """
     with (
         importlib.resources.files("clim2parquet.data")
@@ -25,7 +29,7 @@ def _get_data_info() -> pd.DataFrame:
         return pd.read_csv(f, dtype=str)
 
 
-def _get_level_pattern(admin_level: int, gadm_version: str = "v410"):
+def _get_level_pattern(admin_level: int, gadm_version: str = "v410") -> str:
     """
     Get file naming pattern for a GADM admin level.
 
@@ -38,7 +42,7 @@ def _get_level_pattern(admin_level: int, gadm_version: str = "v410"):
     )
 
 
-def _get_files_size(files: list):
+def _get_files_size(files: list) -> float:
     """
     Get the total size of a list of files in megabytes.
 
@@ -53,14 +57,17 @@ def _get_files_size(files: list):
 
 
 def _find_clim_files(
-    dir: str, data_source: str, admin_level: int, gadm_version: str = "v410"
-):
+    dir_from: str,
+    data_source: str,
+    admin_level: int,
+    gadm_version: str = "v410",
+) -> list[str]:
     """
     Find climate data files for a given GADM admin level and data source.
 
     Parameters
     ----------
-    dir : str
+    dir_from : str
         Path to the directory containing the data files.
     data_source : str
         The data source name. See available data sources in `get_data_names()`.
@@ -76,7 +83,7 @@ def _find_clim_files(
         admin level. Prints the number of files found and their total size
         to the console as a side effect.
     """
-    files = os.listdir(dir)
+    files = os.listdir(dir_from)
 
     # get regex to search directory for data files
     data_info = _get_data_info()
@@ -85,7 +92,7 @@ def _find_clim_files(
     ].item()
 
     pattern = _get_level_pattern(admin_level, gadm_version) + data_pattern
-    files = [os.path.join(dir, f) for f in files if re.search(pattern, f)]
+    files = [os.path.join(dir_from, f) for f in files if re.search(pattern, f)]
 
     if len(files) < 1:
         warnings.warn(
@@ -103,7 +110,7 @@ def _find_clim_files(
     return files
 
 
-def _gadm_levels():
+def _gadm_levels() -> list[int]:
     """
     Supported GADM admin levels.
 
@@ -114,14 +121,20 @@ def _gadm_levels():
     return [0, 1, 2, 3]
 
 
-def _gadm_versions():
+def _gadm_versions() -> list[str]:
     """
     Supported GADM version strings.
+
+    Returns
+    -------
+    A list of strings representing the supported GADM versions. Currently only
+        v4.1.0 is supported.
+
     """
     return ["v410"]
 
 
-def _make_output_names(data_source: str, admin_level: int):
+def _make_output_names(data_source: str, admin_level: int) -> str:
     """
     Make output file names for a given data source and GADM admin level.
 
@@ -144,7 +157,7 @@ def _make_output_names(data_source: str, admin_level: int):
     return data_output_name + "_admin_" + str(admin_level) + ".parquet"
 
 
-def _files_to_parquet(files: list, to: str):
+def _files_to_parquet(files: list, to: str) -> None:
     """
     Convert country data from CSV to Parquet file.
 
@@ -157,9 +170,11 @@ def _files_to_parquet(files: list, to: str):
 
     Returns
     -------
-    None. Called only for the side effect of converting CSV data files to Parquet.
+    None. Called only for the side effect of converting CSV data files to
+    Parquet.
     """
     data_list = []
+    # NOTE: function will error if there are no files
     for file in files:
         df = pd.read_csv(file, sep=",", header=0)
         data_list.append(df)
