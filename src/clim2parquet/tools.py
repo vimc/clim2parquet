@@ -61,12 +61,12 @@ def _get_files_size(files: list[Path]) -> float:
 
     Returns
     -------
-    A `float` representing the total size of the files in megabytes.
+    A `float` representing the total size of the files in bytes.
     """
     size = 0
     for f in files:
         size += f.stat().st_size
-    return size / 1e6
+    return size
 
 
 def _find_clim_files(
@@ -117,7 +117,7 @@ def _find_clim_files(
         files_size = _get_files_size(files)
         logging.info(
             f"Found {len(files)} files with a total size of \
-                {files_size:.2f} MB."
+                {files_size:.2f} B."
         )
 
     return path_files
