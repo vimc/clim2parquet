@@ -87,12 +87,17 @@ def _find_clim_files(
     pattern = _get_level_pattern(admin_level, gadm_version) + data_pattern
     files = [os.path.join(dir, f) for f in files if re.search(pattern, f)]
 
-    if len(files) == 0:
-        print(f"Warning: Found no {data_source} files under `{dir}`!")
+    if len(files) < 1:
+        warnings.warn(
+            f"Warning: Found no {data_source} files for admin level \
+                {admin_level} under `{dir_from}`!",
+            stacklevel=2,
+        )
     else:
         files_size = _get_files_size(files)
-        print(
-            f"Found {len(files)} files with a total size of {files_size:.2f} MB."
+        logging.info(
+            f"Found {len(files)} files with a total size of \
+                {files_size:.2f} MB."
         )
 
     return files

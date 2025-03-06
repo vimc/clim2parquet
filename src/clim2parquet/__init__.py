@@ -88,15 +88,9 @@ def clim_to_parquet(
     # currently offering only data source and admin level combinations
     for d in data_source:
         for i in admin_level:
+            # NOTE: file finder fun throws a warning if no files are found
             in_files = tools._find_clim_files(dir_from, d, i, gadm_version)
-
-            # Raise warnings when no files are found
-            # TODO: promote to real warning
             if len(in_files) < 1:
-                warnings.warn(
-                    f"No files found for data source {d} at \
-                    admin level {i}, moving on to next operation."
-                )
                 break
             else:
                 out_file = os.path.join(dir_to, tools._make_output_names(d, i))
