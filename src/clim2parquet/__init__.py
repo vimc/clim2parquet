@@ -21,7 +21,7 @@ def get_data_names() -> list[str]:
 
     Returns
     -------
-    list
+    list[str]
         A list of data source names.
     """
     return tools._get_data_info()["data_source"].tolist()
@@ -39,15 +39,15 @@ def clim_to_parquet(  # noqa: C901
 
     Parameters
     ----------
-    data_source: str, list
+    data_source: str, list[str]
         A data source or a list of data sources. See available data sources in
         `get_data_names()`.
-    dir_from : str | Path
+    dir_from : str, Path
         Path to the CSV data directory, as a `str` or `pathlib.Path`.
-    dir_to: str | Path
+    dir_to: str, Path
         Path to the output directory where Parquet files will be saved, as a
         `str` or `pathlib.Path`.
-    admin_level : Optional[int] | Optional[list[int]]
+    admin_level : int, list[int], optional
         GADM admin level as an integer or a list of integers. May have values
         in the range 0 -- 3. Defaults to 0 indicating country level data.
     gadm_version : str
@@ -56,8 +56,8 @@ def clim_to_parquet(  # noqa: C901
 
     Returns
     -------
-    None. Called only for the side effect of converting CSV data files to
-    Parquet.
+    None
+        Called for the side effect of converting CSV data files to Parquet.
     """
     # convert inputs to lists
     if admin_level is None:
