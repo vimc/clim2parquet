@@ -43,7 +43,8 @@ def _get_level_pattern(admin_level: int, gadm_version: str = "v410") -> str:
 
     Returns
     -------
-    A string for a regex pattern to search for files at a specific admin level.
+    str
+        A regex pattern to search for files at a specific admin level.
     """
     rep_level = "\\d+_" * (admin_level + ((admin_level > 0) * 1))
     level_pattern = f"{gadm_version}_{rep_level}"
@@ -61,7 +62,8 @@ def _get_files_size(files: list[Path]) -> float:
 
     Returns
     -------
-    A `float` representing the total size of the files in bytes.
+    float
+        The total size of the files in bytes.
     """
     size = 0
     for f in files:
@@ -92,7 +94,8 @@ def _find_clim_files(
 
     Returns
     -------
-    A list of file paths corresponding to data for the given data source and
+    list[Path]
+        File paths corresponding to data for the given data source and
         admin level. Prints the number of files found and their total size
         to the console as a side effect.
     """
@@ -129,7 +132,8 @@ def _gadm_levels() -> list[int]:
 
     Returns
     -------
-    A list of integers representing the supported GADM admin levels.
+    list[int]
+        A list of integers representing the supported GADM admin levels.
     """
     return [0, 1, 2, 3]
 
@@ -140,8 +144,9 @@ def _gadm_versions() -> list[str]:
 
     Returns
     -------
-    A list of strings representing the supported GADM versions. Currently only
-        v4.1.0 is supported.
+    list[str]
+        A list of strings representing the supported GADM versions. Currently
+        only v4.1.0 is supported.
 
     """
     return ["v410"]
@@ -160,7 +165,9 @@ def _make_output_names(data_source: str, admin_level: int) -> str:
 
     Returns
     -------
-    A string for the output file name. Does not contain the output directory.
+    str
+        A string for the output file name. Does not contain the output
+        directory.
     """
     data_info = _get_data_info()
     data_output_name = data_info.loc[
@@ -184,8 +191,9 @@ def _files_to_parquet(files: list[Path], to: str) -> None:
 
     Returns
     -------
-    None. Called only for the side effect of converting CSV data files to
-    Parquet.
+    None
+        Called only for the side effect of converting CSV data files to
+        Parquet.
     """
     data_list = []
     # NOTE: function will error if there are no files
