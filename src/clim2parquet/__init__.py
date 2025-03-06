@@ -9,7 +9,7 @@ This package provides functionality to find and convert country climate data,
 assumed to be stored as CSVs, to Parquet files.
 """
 
-import os
+from pathlib import Path
 from typing import Optional
 
 from . import tools
@@ -29,8 +29,8 @@ def get_data_names() -> list[str]:
 
 def clim_to_parquet(  # noqa: C901
     data_source: str | list[str],
-    dir_from: str,
-    dir_to: str,
+    dir_from: str | Path,
+    dir_to: str | Path,
     admin_level: Optional[int] | Optional[list[int]] = None,
     gadm_version: str = "v410",
 ) -> None:
@@ -42,11 +42,12 @@ def clim_to_parquet(  # noqa: C901
     data_source: str, list
         A data source or a list of data sources. See available data sources in
         `get_data_names()`.
-    dir_from : str
-        Path to the CSV data directory.
-    dir_to: str
-        Path to the output directory where Parquet files will be saved.
-    admin_level : list
+    dir_from : str | Path
+        Path to the CSV data directory, as a `str` or `pathlib.Path`.
+    dir_to: str | Path
+        Path to the output directory where Parquet files will be saved, as a
+        `str` or `pathlib.Path`.
+    admin_level : Optional[int] | Optional[list[int]]
         GADM admin level as an integer or a list of integers. May have values
         in the range 0 -- 3. Defaults to 0 indicating country level data.
     gadm_version : str
@@ -82,21 +83,26 @@ def clim_to_parquet(  # noqa: C901
             supported, and is specified as 'v410'."
         raise ValueError(err_bad_gadm)
 
-    if not os.path.exists(dir_from):
-        err_no_from = "Data source directory `dir_from` not found."
+    path_dir_from = Path(dir_from)
+    if not path_dir_from.is_dir():
+        err_no_from = f"Data source directory {dir_from} not found or is not \
+            a directory."
         raise Exception(err_no_from)
 
-    if not os.path.exists(dir_to):
-        err_no_dest = "Data output directory `dir_to` not found."
+    path_dir_to = Path(dir_to)
+    if not path_dir_to.is_dir():
+        err_no_dest = f"Data output directory {dir_to} not found or is not \
+            a directory."
         raise Exception(err_no_dest)
 
     # currently offering only data source and admin level combinations
     for d in data_source:
         for i in admin_level:
             # NOTE: file finder fun throws a warning if no files are found
-            in_files = tools._find_clim_files(dir_from, d, i, gadm_version)
+            in_files = tools._find_clim_files(path_dir_from, d, i, gadm_version)
             if len(in_files) < 1:
                 break
             else:
-                out_file = os.path.join(dir_to, tools._make_output_names(d, i))
+                # out_file is a string as pyarrow does not support pathlib.Path
+                out_file = str(path_dir_to / tools._make_output_names(d, i))
                 tools._files_to_parquet(in_files, out_file)
