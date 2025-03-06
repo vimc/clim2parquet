@@ -1,17 +1,19 @@
-import clim2parquet
+"""Test conversion from CSV to Parquet using top-level function."""
+
 import os
-import pytest
 import tempfile
 import warnings
 
+import pytest
+
+import clim2parquet
+
+
 # Test all data-specific functions and main wrapper function clim_to_parquet()
 # for admin level 0 (country level)
-
-
 # Test conversion from specific data source
-def test_clim_to_parquet():
+def test_clim_to_parquet() -> None:
     """Test that climate data parquet files have been created."""
-
     admin_level = 0
     with tempfile.TemporaryDirectory() as temp_dir:
         # admin level defaults to 0
@@ -38,9 +40,8 @@ def test_clim_to_parquet():
         assert os.path.exists(f)
 
 
-def test_multiclim_to_parquet():
+def test_multiclim_to_parquet() -> None:
     """Test that multiple climate data parquet files have been created."""
-
     admin_level = 0
     with tempfile.TemporaryDirectory() as temp_dir:
         # admin level defaults to 0
@@ -55,15 +56,14 @@ def test_multiclim_to_parquet():
         ]
 
         for f in file_names:
-            f = os.path.join(temp_dir, f)
-            assert os.path.exists(f)
+            fl = os.path.join(temp_dir, f)
+            assert os.path.exists(fl)
 
 
 # Test that CHIRPS to parquet works for admin 1
 # Data for further levels not included in test data
-def test_chirps_to_parquet_admin_1():
+def test_chirps_to_parquet_admin_1() -> None:
     """Test that climate data parquet files have been created."""
-
     admin_level = 1
     with tempfile.TemporaryDirectory() as temp_dir:
         # admin level defaults to 0
@@ -78,7 +78,8 @@ def test_chirps_to_parquet_admin_1():
 
 
 # Tests for errors
-def test_clim_to_parquet_errors():
+def test_clim_to_parquet_errors() -> None:
+    """Check for errors in clim_to_parquet()."""
     with pytest.raises(ValueError, match=r"One or more of `data_source`"):
         clim2parquet.clim_to_parquet("dummy_option", ".", ".")
 
@@ -101,4 +102,4 @@ def test_clim_to_parquet_errors():
         )
         assert len(w) == 1
         assert issubclass(w[-1].category, Warning)
-        assert "No files found" in str(w[-1].message)
+        assert f"Found no {data_sources} files" in str(w[-1].message)
