@@ -12,7 +12,7 @@ assumed to be stored as CSVs, to Parquet files.
 from pathlib import Path
 from typing import Optional
 
-from . import tools
+from clim2parquet import tools
 
 
 def get_data_names() -> list[str]:
