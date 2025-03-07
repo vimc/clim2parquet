@@ -1,0 +1,93 @@
+# See here for details:
+# https://squidfunk.github.io/mkdocs-material/setup/
+
+site_name: clim2parquet
+site_url: https://vimc.github.io/clim2parquet/
+repo_url: https://github.com/vimc/clim2parquet
+repo_name: vimc/clim2parquet
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - navigation.sections
+    - content.action.edit
+  palette: 
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      primary: blue
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to light mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      primary: indigo
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to dark mode
+
+
+nav:
+  - "Home": index.md
+  - "Reference": reference.md
+  - "News": CHANGELOG.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      auto_title: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+plugins:
+- search
+- mkdocstrings:
+    default_handler: python
+    handlers:
+      python:
+        paths: [src]
+        options:
+          docstring_style: numpy
+- spellcheck:
+    backends:  # the backends you want to use
+    - symspellpy  # as strings
+    - codespell:  # or nested configs
+        dictionaries: [clear, rare]
+
+    # known_words can also be a list of words
+    known_words: known_words.txt
+
+    # ignore words in <code> tags
+    ignore_code: yes
+
+    # minimum length of words to consider
+    min_length: 2
+
+    # maximum number of capital letters in a word
+    max_capital: 1
+
+    # keep unicode characters
+    allow_unicode: no
+
+    # skip files entirely (supports Unix shell-style wildcards)
+    skip_files:
+    - credits.md
+    - coverage.md
+    - reference/* 
+
+    # whether to only check in strict mode
+    strict_only: yes

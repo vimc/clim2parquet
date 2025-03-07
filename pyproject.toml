@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "clim2parquet"
-version = "0.0.1"
-description = 'Converts climate data CSVs to parquet format'
+dynamic = ["version"]
+description = 'Convert climate data CSVs to parquet format'
 readme = "README.md"
 requires-python = ">=3.8"
 license = "MIT"
@@ -25,12 +25,10 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "ipykernel>=6.29.5",
   "pandas",
   "pathlib>=1.0.1",
   "pyarrow",
   "pytest>=8.3.5",
-  "ruff>=0.9.9",
 ]
 
 [project.urls]
@@ -61,7 +59,6 @@ cov-ci = [
   "test-cov",
   "cov-report-xml",
 ]
-
 
 [[tool.hatch.envs.all.matrix]]
 python = ["3.10", "3.11", "3.12", "3.13"]
@@ -153,3 +150,16 @@ select = [
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
+
+[tool.hatch.envs.docs]
+extra-dependencies = [
+  "mkdocs>=1.6.1",
+  "mkdocs-bootstrap4>=0.1.5",
+  "mkdocs-material>=9.6.7",
+  "mkdocs-spellcheck[all]>=1.1.0",
+  "mkdocstrings-python>=1.11.1",
+]
+
+[tool.hatch.envs.docs.scripts]
+build = "mkdocs build {args}"
+serve = "mkdocs serve {args}"

@@ -7,6 +7,11 @@ Convert country climate data to Parquet files.
 
 This package provides functionality to find and convert country climate data,
 assumed to be stored as CSVs, to Parquet files.
+
+This package contains the functions:
+
+- `get_data_names()`  -  Returns names of climate data sources.
+- `clim_to_parquet()`  -  Converts climate data to a single Parquet file.
 """
 
 from pathlib import Path
@@ -58,6 +63,18 @@ def clim_to_parquet(  # noqa: C901
     -------
     None
         Called for the side effect of converting CSV data files to Parquet.
+
+    Raises
+    ------
+    ValueError
+        If `data_source`, `admin_level`, or `gadm_version` are not valid.
+    Exception
+        If `dir_from` or `dir_to` are not valid directories.
+
+    Warns
+    -----
+    UserWarning
+        If no climate files are found in the input directory.
     """
     # convert inputs to lists
     if admin_level is None:
