@@ -1,7 +1,10 @@
 # clim2parquet: Convert climate data CSVs to Parquet
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/license/mit/)
 [![PyPI - Version](https://img.shields.io/pypi/v/clim2parquet.svg)](https://pypi.org/project/clim2parquet)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/clim2parquet.svg)](https://pypi.org/project/clim2parquet)
+[![codecov](https://codecov.io/gh/vimc/clim2parquet/graph/badge.svg?token=W5gs0PqZDu)](https://codecov.io/gh/vimc/clim2parquet)
+[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 
 _clim2parquet_ is a small Python package for internal use at [RESIDE-IC](https://reside-ic.github.io/) to convert prepared climate time-series data into Parquet files in support of climate-informed infectious disease modelling for [VIMC](https://www.vaccineimpact.org/).
 
