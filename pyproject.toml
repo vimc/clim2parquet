@@ -25,12 +25,10 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "ipykernel>=6.29.5",
   "pandas",
   "pathlib>=1.0.1",
   "pyarrow",
   "pytest>=8.3.5",
-  "ruff>=0.9.9",
 ]
 
 [project.urls]
