@@ -27,8 +27,9 @@ classifiers = [
 dependencies = [
   "ipykernel>=6.29.5",
   "mkdocs>=1.6.1",
+  "mkdocs-bootstrap4>=0.1.5",
   "mkdocs-material>=9.6.7",
-  "mkdocstrings[python]>=0.26.1",
+  "mkdocstrings-python>=1.11.1",
   "pandas",
   "pathlib>=1.0.1",
   "pyarrow",
@@ -64,7 +65,6 @@ cov-ci = [
   "test-cov",
   "cov-report-xml",
 ]
-
 
 [[tool.hatch.envs.all.matrix]]
 python = ["3.10", "3.11", "3.12", "3.13"]
@@ -156,3 +156,13 @@ select = [
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
+
+[tool.hatch.envs.docs]
+extra-dependencies = [
+  "mkdocs-material",
+  "mkdocstrings-python",
+]
+
+[tool.hatch.envs.docs.scripts]
+build = "mkdocs build"
+serve = "mkdocs serve"
