@@ -26,11 +26,6 @@ classifiers = [
 ]
 dependencies = [
   "ipykernel>=6.29.5",
-  "mkdocs>=1.6.1",
-  "mkdocs-bootstrap4>=0.1.5",
-  "mkdocs-material>=9.6.7",
-  "mkdocs-spellcheck[all]>=1.1.0",
-  "mkdocstrings-python>=1.11.1",
   "pandas",
   "pathlib>=1.0.1",
   "pyarrow",
@@ -160,10 +155,13 @@ convention = "numpy"
 
 [tool.hatch.envs.docs]
 extra-dependencies = [
-  "mkdocs-material",
-  "mkdocstrings-python",
+  "mkdocs>=1.6.1",
+  "mkdocs-bootstrap4>=0.1.5",
+  "mkdocs-material>=9.6.7",
+  "mkdocs-spellcheck[all]>=1.1.0",
+  "mkdocstrings-python>=1.11.1",
 ]
 
 [tool.hatch.envs.docs.scripts]
-build = "mkdocs build"
-serve = "mkdocs serve"
+build = "mkdocs build {args}"
+serve = "mkdocs serve {args}"
