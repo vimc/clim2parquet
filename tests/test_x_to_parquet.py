@@ -7,6 +7,8 @@ import pytest
 
 import clim2parquet
 
+path_from = Path("tests/test-data/ZZZ/")
+
 
 # Test all data-specific functions and main wrapper function clim_to_parquet()
 # for admin level 0 (country level)
@@ -14,28 +16,22 @@ import clim2parquet
 def test_clim_to_parquet(tmp_path: Path) -> None:
     """Test that climate data parquet files have been created."""
     admin_level = 0
-    # admin level defaults to 0
 
-    path_from = Path("tests/test-data/country_A/")
     clim2parquet.clim_to_parquet("CHIRPS", path_from, tmp_path)
     file_name = clim2parquet.tools._make_output_names("CHIRPS", admin_level)
     assert (tmp_path / file_name).exists()
 
-    clim2parquet.clim_to_parquet(
-        "ERA5_mean", "tests/test-data/country_A/", tmp_path
-    )
+    clim2parquet.clim_to_parquet("ERA5_mean", path_from, tmp_path)
     file_name = clim2parquet.tools._make_output_names("ERA5_mean", admin_level)
     assert (tmp_path / file_name).exists()
 
 
 def test_multiclim_to_parquet(tmp_path: Path) -> None:
-    """Test that multiple climate data parquet files have been created."""
+    """Test that all climate data sources can be converted."""
     admin_level = 0
-    # admin level defaults to 0
-    data_sources = ["CHIRPS", "ERA5_mean"]
-    clim2parquet.clim_to_parquet(
-        data_sources, "tests/test-data/country_A/", tmp_path
-    )
+
+    data_sources = clim2parquet.get_data_names()
+    clim2parquet.clim_to_parquet(data_sources, path_from, tmp_path)
 
     file_names = [
         clim2parquet.tools._make_output_names(d, admin_level)
@@ -51,9 +47,8 @@ def test_multiclim_to_parquet(tmp_path: Path) -> None:
 def test_chirps_to_parquet_admin_1(tmp_path: Path) -> None:
     """Test that climate data parquet files have been created."""
     admin_level = 1
-    clim2parquet.clim_to_parquet(
-        "CHIRPS", "tests/test-data/country_A/", tmp_path, admin_level
-    )
+
+    clim2parquet.clim_to_parquet("CHIRPS", path_from, tmp_path, admin_level)
     file_name = clim2parquet.tools._make_output_names("CHIRPS", admin_level)
 
     assert (tmp_path / file_name).exists()
@@ -81,17 +76,13 @@ def test_clim_to_parquet_errors() -> None:
 
     bad_dir_to = Path("./dummy_to")
     with pytest.raises(Exception, match=r"Data output directory"):
-        clim2parquet.clim_to_parquet(
-            "CHIRPS", "tests/test-data/country_A/", bad_dir_to
-        )
+        clim2parquet.clim_to_parquet("CHIRPS", path_from, bad_dir_to)
 
     # test for warning when files are absent
     data_sources = "PERSIANN"  # PERSIANN data not included at GADM level 1
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        clim2parquet.clim_to_parquet(
-            data_sources, "tests/test-data/country_A", ".", 1
-        )
+        clim2parquet.clim_to_parquet(data_sources, path_from, ".", 1)
         assert len(w) == 1
         assert issubclass(w[-1].category, Warning)
         assert f"Found no {data_sources} files" in str(w[-1].message)
