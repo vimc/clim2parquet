@@ -53,8 +53,8 @@ def _get_level_pattern(admin_level: int, gadm_version: str = "v410") -> str:
     str
         A regex pattern to search for files at a specific admin level.
     """
-    rep_level = "\\d+_" * (admin_level + ((admin_level > 0) * 1))
-    level_pattern = f"{gadm_version}_{rep_level}"
+    rep_count = admin_level + ((admin_level > 0) * 1)
+    level_pattern = rf"{gadm_version}_(\d+_){{{rep_count}}}"
     return level_pattern
 
 
