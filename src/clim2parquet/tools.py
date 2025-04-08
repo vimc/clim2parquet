@@ -10,6 +10,13 @@ import pandas as pd
 import pyarrow as pa  # type: ignore
 import pyarrow.parquet as pq  # type: ignore
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+logger.addHandler(console_handler)
+
 
 def _get_data_info() -> pd.DataFrame:
     """
@@ -112,15 +119,15 @@ def _find_clim_files(
 
     if len(path_files) < 1:
         warnings.warn(
-            f"Found no {data_source} files for admin level {admin_level} under \
-                `{dir_from}`!",
+            f"Found no {data_source} files for admin level {admin_level} "
+            f"under '{dir_from}'!",
             stacklevel=2,
         )
     else:
-        files_size = _get_files_size(files)
-        logging.info(
-            f"Found {len(files)} files with a total size of \
-                {files_size:.2f} B."
+        files_size = _get_files_size(path_files)
+        logger.info(
+            f"Found {len(path_files)} '{data_source}' files; "
+            f"total size = {files_size:.2f} B."
         )
 
     return path_files
