@@ -62,7 +62,21 @@ def clim_to_parquet(  # noqa: C901
     Returns
     -------
     None
-        Called for the side effect of converting CSV data files to Parquet.
+        Called for the side effect of converting CSV data files to Parquet files
+        with each admin level combined into a single file where each admin-unit
+        file is vertically concatenated. Existing variables are maintained.
+
+        Columns `admin_unit_*` and `gid_code_version` are added for the numeric
+        identifier for each admin level `*` and the GADM identification
+        code version (usually `"1"`).
+
+        E.g. Where admin-level 1 is `10` and admin-level 2 is `3`, the columns
+        `admin_unit_1` and `admin_unit_2` will hold the values `"10"` and `"3"`
+        respectively.
+
+        The special case of country level data is handled by including a column
+        `admin_unit_0` with all values set to `"0"`.
+
 
     Raises
     ------
@@ -122,4 +136,4 @@ def clim_to_parquet(  # noqa: C901
             else:
                 # out_file is a string as pyarrow does not support pathlib.Path
                 out_file = str(path_dir_to / tools._make_output_names(d, i))
-                tools._files_to_parquet(in_files, out_file)
+                tools._files_to_parquet(in_files, out_file, i, gadm_version)
