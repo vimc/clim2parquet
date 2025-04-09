@@ -218,17 +218,22 @@ def _get_admin_data(
         version.
     """
     pattern = _get_level_pattern(admin_level, gadm_version)
-    match = re.search(pattern, filename).group(0)
-    match = match.strip(gadm_version)
-    match = match.strip("_")
+    match = re.search(pattern, filename)
 
-    if match:
-        matches = re.findall(r"\d+", match)
-        return matches
-    else:
-        # admin level is 0 (country)
-        # GID code version assumed to be 1
-        return ["0", "1"]
+    admin_data = [""]
+    if isinstance(match, str):
+        match = match.group(0)
+        match = match.strip(gadm_version)
+        match = match.strip("_")
+
+        if match:
+            admin_data = re.findall(r"\d+", match)
+        else:
+            # admin level is 0 (country)
+            # GID code version assumed to be 1
+            admin_data = ["0", "1"]
+
+    return admin_data
 
 
 def _add_admin_data(data: pd.DataFrame, admin_data: list[str]) -> None:
