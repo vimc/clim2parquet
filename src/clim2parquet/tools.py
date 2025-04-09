@@ -36,7 +36,7 @@ def _get_data_info() -> pd.DataFrame:
         return pd.read_csv(f, dtype=str)
 
 
-def _get_level_pattern(admin_level: int, gadm_version: str = "v410") -> str:
+def _get_level_pattern(admin_level: int, gadm_version: str) -> str:
     """
     Get file naming pattern for a GADM admin level.
 
@@ -45,16 +45,19 @@ def _get_level_pattern(admin_level: int, gadm_version: str = "v410") -> str:
     admin_level : int
         GADM admin level as an integer. Must be in the range 0 -- 3.
     gadm_version : str
-        GADM version as a string. Default is "v410" for v4.1.0. No other
-        versions are currently supported.
+        GADM version as a string. No default as this is passed from higher level
+        functions.
 
     Returns
     -------
     str
         A regex pattern to search for files at a specific admin level.
     """
+    # NOTE: GADM level 0 has no level or GID code annotation
     rep_count = admin_level + ((admin_level > 0) * 1)
+
     level_pattern = rf"{gadm_version}_(\d+_){{{rep_count}}}"
+
     return level_pattern
 
 
@@ -79,10 +82,7 @@ def _get_files_size(files: list[Path]) -> float:
 
 
 def _find_clim_files(
-    dir_from: Path,
-    data_source: str,
-    admin_level: int,
-    gadm_version: str = "v410",
+    dir_from: Path, data_source: str, admin_level: int, gadm_version: str
 ) -> list[Path]:
     """
     Find climate data files for a given GADM admin level and data source.
@@ -96,8 +96,8 @@ def _find_clim_files(
     admin_level : int
         GADM admin level as an integer. Must be in the range 0 -- 3.
     gadm_version : str
-        GADM version as a string. Default is "v410" for v4.1.0. No other
-        versions are currently supported.
+        GADM version as a string. No default for this internal function as this
+        is passed from higher level functions.
 
     Returns
     -------
@@ -260,6 +260,9 @@ def _add_admin_data(data: pd.DataFrame, admin_data: list[str]) -> None:
     data["gid_code_version"] = gid_code_version
 
 
+def _files_to_parquet(
+    files: list[Path], to: str, admin_level: int, gadm_version: str
+) -> None:
     """
     Convert country data from CSV to Parquet file.
 
@@ -281,8 +284,11 @@ def _add_admin_data(data: pd.DataFrame, admin_data: list[str]) -> None:
     # NOTE: function will error if there are no files
     for file in files:
         df = pd.read_csv(file, sep=",", header=0)
+        _add_admin_data(
+            df, _get_admin_data(str(file), admin_level, gadm_version)
+        )
         data_list.append(df)
 
     df = pd.concat(data_list)
-    table = pa.Table.from_pandas(df)
+    table = pa.Table.from_pandas(df, preserve_index=False)
     pq.write_table(table, to)
