@@ -184,7 +184,82 @@ def _make_output_names(data_source: str, admin_level: int) -> str:
     return f"{data_output_name}_admin_{admin_level}.parquet"
 
 
-def _files_to_parquet(files: list[Path], to: str) -> None:
+def _get_admin_data(
+    filename: str, admin_level: int, gadm_version: str
+) -> list[str]:
+    """
+    Get GADM admin-level and admin-unit information from a filename.
+
+    Parameters
+    ----------
+    filename : str
+        The filename of the data file.
+    admin_level : int
+        GADM admin level as an integer.
+    gadm_version : str
+        GADM version as a string. No default as this is passed from higher level
+        functions.
+
+    Returns
+    -------
+    list[str]
+        A list of strings. For GADM level 0 (country level), the list
+        `['0', '1']` is returned indicating country level data and a GADM
+        identification code (GID code) version of 1.0. No other admin units
+        have a numeric identifier of 0.
+
+        For all levels > 0, a list with N + 1 elements, where the last element
+        is the GID code version. Of the preceding N elements, the i-th element
+        is the numeric identifier of the i-th admin level.
+
+        For example, the file `'*_v410_1_2_3_4_clim.csv'` would return
+        ['1', '2', '3', '4'], where 1, 2, and 3 are the numeric identifiers of
+        the 1st, 2nd, and 3rd admin levels, respectively, and 4 is the GID code
+        version.
+    """
+    pattern = _get_level_pattern(admin_level, gadm_version)
+    match = re.search(pattern, filename).group(0)
+    match = match.strip(gadm_version)
+    match = match.strip("_")
+
+    if match:
+        matches = re.findall(r"\d+", match)
+        return matches
+    else:
+        # admin level is 0 (country)
+        # GID code version assumed to be 1
+        return ["0", "1"]
+
+
+def _add_admin_data(data: pd.DataFrame, admin_data: list[str]) -> None:
+    """
+    Add GADM admin-level and admin-unit data to a dataframe of climate data.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        A Pandas DataFrame containing climate data.
+    admin_data : list[str]
+        A list of strings with GADM admin-unit data and GID code version,
+        typically extracted from the filename using `_get_admin_data()`.
+
+    Returns
+    -------
+    None
+        Called only for the side effect of modifying the input `DataFrame`.
+        Note that this function modifies the input `DataFrame` in place.
+    """
+    gid_code_version = admin_data[-1]
+
+    # handle special case of admin level 0 (country level)
+    level_bump = 0 if (admin_data[0] == "0") else 1
+
+    # NOTE: modification in place
+    for i, value in enumerate(admin_data[:-1]):
+        data[f"admin_unit_{i + level_bump}"] = value
+    data["gid_code_version"] = gid_code_version
+
+
     """
     Convert country data from CSV to Parquet file.
 
