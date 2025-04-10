@@ -126,7 +126,8 @@ def _find_clim_files(
     else:
         files_size = _get_files_size(path_files)
         logger.info(
-            f"Found {len(path_files)} '{data_source}' files; "
+            f"Found {len(path_files)} '{data_source}' files at "
+            f"admin level {admin_level}; "
             f"total size = {files_size:.2f} B."
         )
 
