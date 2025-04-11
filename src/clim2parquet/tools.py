@@ -221,18 +221,16 @@ def _get_admin_data(
     pattern = _get_level_pattern(admin_level, gadm_version)
     match = re.search(pattern, filename)
 
-    admin_data = [""]
-    if isinstance(match, str):
-        match = match.group(0)
-        match = match.strip(gadm_version)
-        match = match.strip("_")
+    match_0 = match.group(0)  # type: ignore
+    match_0 = match_0.strip(gadm_version)
+    match_0 = match_0.strip("_")
 
-        if match:
-            admin_data = re.findall(r"\d+", match)
-        else:
-            # admin level is 0 (country)
-            # GID code version assumed to be 1
-            admin_data = ["0", "1"]
+    if match_0:
+        admin_data = re.findall(r"\d+", match_0)
+    else:
+        # admin level is 0 (country)
+        # GID code version assumed to be 1
+        admin_data = ["0", "1"]
 
     return admin_data
 
