@@ -3,9 +3,14 @@
 import warnings
 from pathlib import Path
 
+import pyarrow as pa  # type: ignore
+import pyarrow.compute as pc  # type: ignore
+import pyarrow.parquet as pq  # type: ignore
 import pytest
 
 import clim2parquet
+
+path_from = Path("tests/test-data/ZZZ/")
 
 
 # Test all data-specific functions and main wrapper function clim_to_parquet()
@@ -14,28 +19,22 @@ import clim2parquet
 def test_clim_to_parquet(tmp_path: Path) -> None:
     """Test that climate data parquet files have been created."""
     admin_level = 0
-    # admin level defaults to 0
 
-    path_from = Path("tests/test-data/country_A/")
     clim2parquet.clim_to_parquet("CHIRPS", path_from, tmp_path)
     file_name = clim2parquet.tools._make_output_names("CHIRPS", admin_level)
     assert (tmp_path / file_name).exists()
 
-    clim2parquet.clim_to_parquet(
-        "ERA5_mean", "tests/test-data/country_A/", tmp_path
-    )
+    clim2parquet.clim_to_parquet("ERA5_mean", path_from, tmp_path)
     file_name = clim2parquet.tools._make_output_names("ERA5_mean", admin_level)
     assert (tmp_path / file_name).exists()
 
 
 def test_multiclim_to_parquet(tmp_path: Path) -> None:
-    """Test that multiple climate data parquet files have been created."""
+    """Test that all climate data sources can be converted."""
     admin_level = 0
-    # admin level defaults to 0
-    data_sources = ["CHIRPS", "ERA5_mean"]
-    clim2parquet.clim_to_parquet(
-        data_sources, "tests/test-data/country_A/", tmp_path
-    )
+
+    data_sources = clim2parquet.get_data_names()
+    clim2parquet.clim_to_parquet(data_sources, path_from, tmp_path)
 
     file_names = [
         clim2parquet.tools._make_output_names(d, admin_level)
@@ -51,12 +50,73 @@ def test_multiclim_to_parquet(tmp_path: Path) -> None:
 def test_chirps_to_parquet_admin_1(tmp_path: Path) -> None:
     """Test that climate data parquet files have been created."""
     admin_level = 1
-    clim2parquet.clim_to_parquet(
-        "CHIRPS", "tests/test-data/country_A/", tmp_path, admin_level
-    )
+
+    clim2parquet.clim_to_parquet("CHIRPS", path_from, tmp_path, admin_level)
     file_name = clim2parquet.tools._make_output_names("CHIRPS", admin_level)
 
     assert (tmp_path / file_name).exists()
+
+
+# Test output conforms to expectations for country level data
+def test_output_format_lvl_0(tmp_path: Path) -> None:
+    """Test that Parquet output has required format for country level data."""
+    admin_level = 0
+
+    file_name = clim2parquet.tools._make_output_names("ERA5_RH", admin_level)
+    clim2parquet.clim_to_parquet("ERA5_RH", path_from, tmp_path, admin_level)
+    data = pq.read_table(tmp_path / file_name)
+
+    admin_info_cols = [f"admin_unit_{admin_level}", "gid_code_version"]
+
+    assert isinstance(data, pa.Table)
+    assert all(i in data.column_names for i in admin_info_cols)
+
+    col_to_get = f"admin_unit_{admin_level}"
+    data_admin_level = pc.unique(data.column(col_to_get))
+    assert pc.equal(data_admin_level, str(admin_level))  # special case
+
+
+# Test output conforms to expectations for subnational data
+def test_output_format_lvl_1(tmp_path: Path) -> None:
+    """Test that Parquet output has required format for subnational data."""
+    admin_level = 1
+
+    file_name = clim2parquet.tools._make_output_names("CHIRPS", admin_level)
+    clim2parquet.clim_to_parquet("CHIRPS", path_from, tmp_path, admin_level)
+    data = pq.read_table(tmp_path / file_name)
+
+    admin_info_cols = [f"admin_unit_{admin_level}", "gid_code_version"]
+
+    assert isinstance(data, pa.Table)
+    assert all(i in data.column_names for i in admin_info_cols)
+
+    col_to_get = f"admin_unit_{admin_level}"
+    data_admin_level = pc.unique(data.column(col_to_get))
+    data_admin_level = data_admin_level.to_pylist()
+    assert all(int(i) > 0 for i in data_admin_level)  # robust to future data
+
+
+# Test output conforms to expectations for subnational data
+def test_output_format_lvl_n(tmp_path: Path) -> None:
+    """Test that Parquet output has required format for subnational data."""
+    admin_level = 3
+    admin_levels_range = range(1, admin_level + 1)
+
+    file_name = clim2parquet.tools._make_output_names("ERA5_mean", admin_level)
+    clim2parquet.clim_to_parquet("ERA5_mean", path_from, tmp_path, admin_level)
+    data = pq.read_table(tmp_path / file_name)
+
+    # not checking GID version
+    admin_info_cols = [f"admin_unit_{i}" for i in admin_levels_range]
+
+    assert isinstance(data, pa.Table)
+    assert all(i in data.column_names for i in admin_info_cols)
+
+    # check lowest admin level unit id > 0
+    col_to_get = f"admin_unit_{admin_level}"
+    data_admin_level = pc.unique(data.column(col_to_get))
+    data_admin_level = data_admin_level.to_pylist()
+    assert all(int(i) > 0 for i in data_admin_level)  # robust to future data
 
 
 # Tests for errors
@@ -81,17 +141,13 @@ def test_clim_to_parquet_errors() -> None:
 
     bad_dir_to = Path("./dummy_to")
     with pytest.raises(Exception, match=r"Data output directory"):
-        clim2parquet.clim_to_parquet(
-            "CHIRPS", "tests/test-data/country_A/", bad_dir_to
-        )
+        clim2parquet.clim_to_parquet("CHIRPS", path_from, bad_dir_to)
 
     # test for warning when files are absent
     data_sources = "PERSIANN"  # PERSIANN data not included at GADM level 1
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        clim2parquet.clim_to_parquet(
-            data_sources, "tests/test-data/country_A", ".", 1
-        )
+        clim2parquet.clim_to_parquet(data_sources, path_from, ".", 1)
         assert len(w) == 1
         assert issubclass(w[-1].category, Warning)
         assert f"Found no {data_sources} files" in str(w[-1].message)

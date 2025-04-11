@@ -151,6 +151,9 @@ select = [
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
 
+[tool.uv.workspace]
+members = ["data-raw"]
+
 [tool.hatch.envs.docs]
 extra-dependencies = [
   "mkdocs>=1.6.1",
