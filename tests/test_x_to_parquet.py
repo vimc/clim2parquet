@@ -3,6 +3,9 @@
 import warnings
 from pathlib import Path
 
+import pyarrow as pa  # type: ignore
+import pyarrow.compute as pc  # type: ignore
+import pyarrow.parquet as pq  # type: ignore
 import pytest
 
 import clim2parquet
@@ -52,6 +55,45 @@ def test_chirps_to_parquet_admin_1(tmp_path: Path) -> None:
     file_name = clim2parquet.tools._make_output_names("CHIRPS", admin_level)
 
     assert (tmp_path / file_name).exists()
+
+
+# Test output conforms to expectations for country level data
+def test_output_format_lvl_0(tmp_path: Path) -> None:
+    """Test that Parquet output has required format for country level data."""
+    admin_level = 0
+
+    file_name = clim2parquet.tools._make_output_names("ERA5_RH", admin_level)
+    clim2parquet.clim_to_parquet("ERA5_RH", path_from, tmp_path, admin_level)
+    data = pq.read_table(tmp_path / file_name)
+
+    admin_info_cols = [f"admin_unit_{admin_level}", "gid_code_version"]
+
+    assert isinstance(data, pa.Table)
+    assert all(i in data.column_names for i in admin_info_cols)
+
+    col_to_get = f"admin_unit_{admin_level}"
+    data_admin_level = pc.unique(data.column(col_to_get))
+    assert pc.equal(data_admin_level, str(admin_level))  # special case
+
+
+# Test output conforms to expectations for subnational data
+def test_output_format_lvl_n(tmp_path: Path) -> None:
+    """Test that Parquet output has required format for subnational data."""
+    admin_level = 1
+
+    file_name = clim2parquet.tools._make_output_names("CHIRPS", admin_level)
+    clim2parquet.clim_to_parquet("CHIRPS", path_from, tmp_path, admin_level)
+    data = pq.read_table(tmp_path / file_name)
+
+    admin_info_cols = [f"admin_unit_{admin_level}", "gid_code_version"]
+
+    assert isinstance(data, pa.Table)
+    assert all(i in data.column_names for i in admin_info_cols)
+
+    col_to_get = f"admin_unit_{admin_level}"
+    data_admin_level = pc.unique(data.column(col_to_get))
+    data_admin_level = data_admin_level.to_pylist()
+    assert all(int(i) > 0 for i in data_admin_level)  # robust to future data
 
 
 # Tests for errors
