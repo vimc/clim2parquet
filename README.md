@@ -50,6 +50,14 @@ We currently support finding and converting the following climate data sources:
 - ERA5 specific humidity
 - PERSIANN
 
+## Package data
+
+This package includes some data accessible via a package function. To generate the raw data file read and provided by this function, run the script `data-raw/data_sources.py`. The recommended way of doing this is using the [`uv` package manager](https://docs.astral.sh/uv/).
+
+```sh
+uv run data-raw/data_sources.py
+```
+
 ## Help
 
 To report a bug please [open an issue](https://github.com/vimc/clim2parquet/issues/new) or get in touch with RESIDE-IC.
