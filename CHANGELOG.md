@@ -10,3 +10,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Added basic package functionality with minimum test set; includes function and package documentation
 
 - Added online documentation build using `mkdocs` and related packages
+
+- Added function `make_admin_unit_ids` to create a directory specific index of administrative units and identifiers.
