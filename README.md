@@ -40,6 +40,9 @@ clim2parquet.clim_to_parquet(
 )
 ```
 
+You can generate a directory-specific index of administrative units to help identify output data and link it to other covariates using the function `make_admin_unit_ids`.
+This function is used automatically from within `clim_to_parquet` if no index file is present in the data directory.
+
 We currently support finding and converting the following climate data sources:
 
 - CHIRPS
