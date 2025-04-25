@@ -66,7 +66,7 @@ def make_admin_unit_ids(
     data_sources = get_data_names()
     levels = tools._gadm_levels()
 
-    admin_data_list = []
+    admin_data_list: list[list[int]] = []
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         for ds in data_sources:
@@ -78,14 +78,17 @@ def make_admin_unit_ids(
                 ]
                 admin_data_list = admin_data_list + admin_data
 
-    admin_data_set = set(tuple(a) for a in admin_data_list)
+    admin_data_set = {tuple(a) for a in admin_data_list}
     admin_data_unq = [list(a) for a in admin_data_set]
     # admin_data_list = admin_data_list + admin_data_unq
 
     admin_data_df = pd.DataFrame(admin_data_unq)
-    admin_data_df.columns = [
-        f"admin_unit_{i}" for i in tools._gadm_levels()
-    ] + ["gid_code_version"]
+    colnames = [f"admin_unit_{i}" for i in tools._gadm_levels()] + [
+        "gid_code_version"
+    ]
+    admin_data_df.rename(
+        columns=dict(zip(admin_data_df.columns, colnames)), inplace=True
+    )
 
     admin_data_df.sort_values(
         [f"admin_unit_{i}" for i in tools._gadm_levels()],
@@ -100,7 +103,7 @@ def make_admin_unit_ids(
     return admin_data_df
 
 
-def clim_to_parquet(  # noqa: C901
+def clim_to_parquet(  # noqa: C901, PLR0912
     data_source: str | list[str],
     dir_from: str | Path,
     dir_to: str | Path,
@@ -197,7 +200,7 @@ def clim_to_parquet(  # noqa: C901
     # load or make admin unit UIDs
     # suppress warnings
     # check if admin unit table is present and generate if not
-    admin_unit_ids_name = dir_from / "admin_unit_uids.csv"
+    admin_unit_ids_name = path_dir_from / "admin_unit_uids.csv"
     if admin_unit_ids_name.is_file():
         # expect that this is a well formed dataframe with needed cols
         admin_unit_uids = pd.read_csv(admin_unit_ids_name)
