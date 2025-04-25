@@ -194,6 +194,16 @@ def clim_to_parquet(  # noqa: C901
             a directory."
         raise Exception(err_no_dest)
 
+    # load or make admin unit UIDs
+    # suppress warnings
+    # check if admin unit table is present and generate if not
+    admin_unit_ids_name = dir_from / "admin_unit_uids.csv"
+    if admin_unit_ids_name.is_file():
+        # expect that this is a well formed dataframe with needed cols
+        admin_unit_uids = pd.read_csv(admin_unit_ids_name)
+    else:
+        admin_unit_uids = make_admin_unit_ids(dir_from)
+
     # currently offering only data source and admin level combinations
     for d in data_source:
         for i in admin_level:
@@ -204,4 +214,6 @@ def clim_to_parquet(  # noqa: C901
             else:
                 # out_file is a string as pyarrow does not support pathlib.Path
                 out_file = str(path_dir_to / tools._make_output_names(d, i))
-                tools._files_to_parquet(in_files, out_file, i, gadm_version)
+                tools._files_to_parquet(
+                    in_files, out_file, i, admin_unit_uids, gadm_version
+                )
