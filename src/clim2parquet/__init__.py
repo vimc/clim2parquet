@@ -14,8 +14,11 @@ This package contains the functions:
 - `clim_to_parquet()`  -  Converts climate data to a single Parquet file.
 """
 
+import warnings
 from pathlib import Path
 from typing import Optional
+
+import pandas as pd
 
 from clim2parquet import tools
 
@@ -30,6 +33,71 @@ def get_data_names() -> list[str]:
         A list of data source names.
     """
     return tools._get_data_info()["data_source"].tolist()
+
+
+def make_admin_unit_ids(
+    dir_from: str | Path, gadm_version: str = "v410"
+) -> pd.DataFrame:
+    """
+    Make a table of country-specific admin-unit identifiers.
+
+    Parameters
+    ----------
+    dir_from : str, Path
+        Path to the CSV data directory, as a `str` or `pathlib.Path`.
+    gadm_version : str
+        GADM version as a string. Default is "v410" for v4.1.0. No other
+        versions are currently supported.
+
+    Returns
+    -------
+    pd.DataFrame
+        A `pandas` `DataFrame` with the admin-unit identifiers.
+    """
+    dir_from = Path(dir_from)
+
+    if not dir_from.is_dir():
+        err_no_dir = f"Directory {dir_from} not found or is not a directory."
+        raise Exception(err_no_dir)
+
+    # in case dir contains partial data, search all files for available admin
+    # unit values. ignore warnings if data source and admin level combos not
+    # found
+    data_sources = get_data_names()
+    levels = tools._gadm_levels()
+
+    admin_data_list = []
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        for ds in data_sources:
+            for i in levels:
+                files = tools._find_clim_files(dir_from, ds, i, gadm_version)
+                admin_data = [
+                    tools._get_admin_data(str(f), i, gadm_version)
+                    for f in files
+                ]
+                admin_data_list = admin_data_list + admin_data
+
+    admin_data_set = set(tuple(a) for a in admin_data_list)
+    admin_data_unq = [list(a) for a in admin_data_set]
+    # admin_data_list = admin_data_list + admin_data_unq
+
+    admin_data_df = pd.DataFrame(admin_data_unq)
+    admin_data_df.columns = [
+        f"admin_unit_{i}" for i in tools._gadm_levels()
+    ] + ["gid_code_version"]
+
+    admin_data_df.sort_values(
+        [f"admin_unit_{i}" for i in tools._gadm_levels()],
+        ascending=[True, True, True, True],
+        inplace=True,
+    )
+
+    # add UIDs and renumber rows for aesthetics. indexing at 0 for country level
+    admin_data_df["uid"] = range(len(admin_data_df))
+    admin_data_df = admin_data_df.reset_index(drop=True)
+
+    return admin_data_df
 
 
 def clim_to_parquet(  # noqa: C901
