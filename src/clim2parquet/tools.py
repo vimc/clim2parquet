@@ -281,7 +281,9 @@ def _get_admin_data(
     return admin_data
 
 
-def _add_admin_data(data: pd.DataFrame, admin_data: list[str]) -> None:
+def _add_admin_data(
+    data: pd.DataFrame, admin_data: list[int], admin_unit_uids: pd.DataFrame
+) -> None:
     """
     Add GADM admin-level and admin-unit data to a dataframe of climate data.
 
@@ -289,9 +291,12 @@ def _add_admin_data(data: pd.DataFrame, admin_data: list[str]) -> None:
     ----------
     data : pd.DataFrame
         A Pandas DataFrame containing climate data.
-    admin_data : list[str]
-        A list of strings with GADM admin-unit data and GID code version,
+    admin_data : list[int]
+        A list of integers with GADM admin-unit data and GID code version,
         typically extracted from the filename using `_get_admin_data()`.
+    admin_unit_uids : pd.DataFrame
+        A Pandas DataFrame containing the admin unit UIDs. This is used to
+        map the admin data to the correct UIDs.
 
     Returns
     -------
@@ -299,15 +304,18 @@ def _add_admin_data(data: pd.DataFrame, admin_data: list[str]) -> None:
         Called only for the side effect of modifying the input `DataFrame`.
         Note that this function modifies the input `DataFrame` in place.
     """
-    gid_code_version = admin_data[-1]
+    # filter admin_data dataframe for values in admin_data
+    admin_unit_uids = admin_unit_uids[
+        (admin_unit_uids["admin_unit_0"] == admin_data[0])
+        & (admin_unit_uids["admin_unit_1"] == admin_data[1])
+        & (admin_unit_uids["admin_unit_2"] == admin_data[2])
+        & (admin_unit_uids["admin_unit_3"] == admin_data[3])
+        & (admin_unit_uids["gid_code_version"] == admin_data[4])
+    ]
 
-    # handle special case of admin level 0 (country level)
-    level_bump = 0 if (admin_data[0] == "0") else 1
-
+    admin_unit_uid = admin_unit_uids["uid"].values[0]
     # NOTE: modification in place
-    for i, value in enumerate(admin_data[:-1]):
-        data[f"admin_unit_{i + level_bump}"] = value
-    data["gid_code_version"] = gid_code_version
+    data["admin_unit_uid"] = admin_unit_uid
 
 
 def _files_to_parquet(
