@@ -221,7 +221,7 @@ def _pad_admin_levels(
 
 def _get_admin_data(
     filename: str, admin_level: int, gadm_version: str
-) -> list[str]:
+) -> list[int]:
     """
     Get GADM admin-level and admin-unit information from a filename.
 
@@ -237,20 +237,21 @@ def _get_admin_data(
 
     Returns
     -------
-    list[str]
-        A list of strings. For GADM level 0 (country level), the list
-        `['0', '1']` is returned indicating country level data and a GADM
+    list[int]
+        A list of 5 integers. For GADM level 0 (country level), the list
+        `[0, 0, 0, 0 1]` is returned indicating country level data and a GADM
         identification code (GID code) version of 1.0. No other admin units
         have a numeric identifier of 0.
 
-        For all levels > 0, a list with N + 1 elements, where the last element
+        For all levels > 0, a list where the last element
         is the GID code version. Of the preceding N elements, the i-th element
-        is the numeric identifier of the i-th admin level.
+        is the numeric identifier of the i-th admin level. The first element is
+        always 0, indicating the country level.
 
         For example, the file `'*_v410_1_2_3_4_clim.csv'` would return
-        ['1', '2', '3', '4'], where 1, 2, and 3 are the numeric identifiers of
+        [0, 1, 2, 3, 4], where 1, 2, and 3 are the numeric identifiers of
         the 1st, 2nd, and 3rd admin levels, respectively, and 4 is the GID code
-        version.
+        version. 0 is the country level identifier.
     """
     pattern = _get_level_pattern(admin_level, gadm_version)
     match = re.search(pattern, filename)
@@ -259,12 +260,23 @@ def _get_admin_data(
     match_0 = match_0.strip(gadm_version)
     match_0 = match_0.strip("_")
 
+    inferred_admin_level = 0
     if match_0:
         admin_data = re.findall(r"\d+", match_0)
+        admin_data = [int(i) for i in admin_data]
+        gid_code = admin_data[-1]
+        admin_data = admin_data[:-1]  # strip GID code
+        inferred_admin_level = len(admin_data)
     else:
         # admin level is 0 (country)
         # GID code version assumed to be 1
-        admin_data = ["0", "1"]
+        admin_data = [0]
+        gid_code = 1
+
+    # process into a 5-element list, filling zeros for lower admin units
+    # and adding GID code
+    admin_data = _pad_admin_levels(admin_data, inferred_admin_level)
+    admin_data.append(gid_code)
 
     return admin_data
 
