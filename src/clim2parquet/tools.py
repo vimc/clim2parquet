@@ -185,6 +185,40 @@ def _make_output_names(data_source: str, admin_level: int) -> str:
     return f"{data_output_name}_admin_{admin_level}.parquet"
 
 
+def _pad_admin_levels(
+    admin_data: list[int], admin_level: int, pad_len: int = 3
+) -> list[int]:
+    """
+    Pad admin data list to a fixed length.
+
+    Parameters
+    ----------
+    admin_data : list[int]
+        A list of integers representing the GADM admin levels. Note that this
+        function expects that the GID code at the end has been removed.
+    admin_level: int
+        The inferred admin level.
+    pad_len : int
+        The padded length of the list. Default is 3.
+        The list is padded with zeros to the right if the inferred admin level
+        is 0, and with a single zero to the left and zeros to the right if the
+        inferred admin level is 1 -- 3.
+    """
+    admin_0_identifier = 0
+
+    # admin 0 and admin 1 have similar signatures
+    zero_counter = 1 if admin_level > 0 else 0
+    pad_len = pad_len + 1 if admin_level == 0 else pad_len
+
+    admin_data = (
+        [admin_0_identifier] * zero_counter
+        + admin_data
+        + [0] * (pad_len - len(admin_data))
+    )
+
+    return admin_data
+
+
 def _get_admin_data(
     filename: str, admin_level: int, gadm_version: str
 ) -> list[str]:
