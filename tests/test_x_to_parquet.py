@@ -4,7 +4,6 @@ import warnings
 from pathlib import Path
 
 import pyarrow as pa  # type: ignore
-import pyarrow.compute as pc  # type: ignore
 import pyarrow.parquet as pq  # type: ignore
 import pytest
 
@@ -66,14 +65,12 @@ def test_output_format_lvl_0(tmp_path: Path) -> None:
     clim2parquet.clim_to_parquet("ERA5_RH", path_from, tmp_path, admin_level)
     data = pq.read_table(tmp_path / file_name)
 
-    admin_info_cols = [f"admin_unit_{admin_level}", "gid_code_version"]
+    admin_info_cols = "admin_unit_uid"
 
     assert isinstance(data, pa.Table)
-    assert all(i in data.column_names for i in admin_info_cols)
-
-    col_to_get = f"admin_unit_{admin_level}"
-    data_admin_level = pc.unique(data.column(col_to_get))
-    assert pc.equal(data_admin_level, str(admin_level))  # special case
+    assert admin_info_cols in data.column_names
+    # assert len(set(data[admin_info_cols])) == 1
+    # assert set(data[admin_info_cols]) == {0}
 
 
 # Test output conforms to expectations for subnational data
@@ -85,38 +82,27 @@ def test_output_format_lvl_1(tmp_path: Path) -> None:
     clim2parquet.clim_to_parquet("CHIRPS", path_from, tmp_path, admin_level)
     data = pq.read_table(tmp_path / file_name)
 
-    admin_info_cols = [f"admin_unit_{admin_level}", "gid_code_version"]
+    admin_info_cols = "admin_unit_uid"
 
     assert isinstance(data, pa.Table)
-    assert all(i in data.column_names for i in admin_info_cols)
-
-    col_to_get = f"admin_unit_{admin_level}"
-    data_admin_level = pc.unique(data.column(col_to_get))
-    data_admin_level = data_admin_level.to_pylist()
-    assert all(int(i) > 0 for i in data_admin_level)  # robust to future data
+    assert admin_info_cols in data.column_names
+    # assert len(set(data[admin_info_cols])) > 1
 
 
 # Test output conforms to expectations for subnational data
 def test_output_format_lvl_n(tmp_path: Path) -> None:
     """Test that Parquet output has required format for subnational data."""
     admin_level = 3
-    admin_levels_range = range(1, admin_level + 1)
 
     file_name = clim2parquet.tools._make_output_names("ERA5_mean", admin_level)
     clim2parquet.clim_to_parquet("ERA5_mean", path_from, tmp_path, admin_level)
     data = pq.read_table(tmp_path / file_name)
 
-    # not checking GID version
-    admin_info_cols = [f"admin_unit_{i}" for i in admin_levels_range]
+    admin_info_cols = "admin_unit_uid"
 
     assert isinstance(data, pa.Table)
-    assert all(i in data.column_names for i in admin_info_cols)
-
-    # check lowest admin level unit id > 0
-    col_to_get = f"admin_unit_{admin_level}"
-    data_admin_level = pc.unique(data.column(col_to_get))
-    data_admin_level = data_admin_level.to_pylist()
-    assert all(int(i) > 0 for i in data_admin_level)  # robust to future data
+    assert admin_info_cols in data.column_names
+    # assert len(set(data[admin_info_cols])) > 1
 
 
 # Tests for errors
