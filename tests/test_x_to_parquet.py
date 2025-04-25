@@ -1,5 +1,6 @@
 """Test conversion from CSV to Parquet using top-level function."""
 
+import shutil
 import warnings
 from pathlib import Path
 
@@ -69,8 +70,7 @@ def test_output_format_lvl_0(tmp_path: Path) -> None:
 
     assert isinstance(data, pa.Table)
     assert admin_info_cols in data.column_names
-    # assert len(set(data[admin_info_cols])) == 1
-    # assert set(data[admin_info_cols]) == {0}
+    assert data[admin_info_cols].unique().to_pylist() == [0]
 
 
 # Test output conforms to expectations for subnational data
@@ -86,7 +86,9 @@ def test_output_format_lvl_1(tmp_path: Path) -> None:
 
     assert isinstance(data, pa.Table)
     assert admin_info_cols in data.column_names
-    # assert len(set(data[admin_info_cols])) > 1
+    unq_uids = data[admin_info_cols].unique()
+    unq_uids_list = unq_uids.to_pylist()
+    assert len(unq_uids_list) > 1
 
 
 # Test output conforms to expectations for subnational data
@@ -102,7 +104,29 @@ def test_output_format_lvl_n(tmp_path: Path) -> None:
 
     assert isinstance(data, pa.Table)
     assert admin_info_cols in data.column_names
-    # assert len(set(data[admin_info_cols])) > 1
+    unq_uids = data[admin_info_cols].unique()
+    unq_uids_list = unq_uids.to_pylist()
+    assert len(unq_uids_list) > 1
+
+
+def test_c2p_admin_units(tmp_path: Path) -> None:
+    """Test that function reads admin unit data if present."""
+    admin_level = 0
+
+    admin_unit_uids = clim2parquet.make_admin_unit_ids(path_from)
+    admin_unit_uids_file = tmp_path / "admin_unit_uids.csv"
+    admin_unit_uids.to_csv(admin_unit_uids_file)
+
+    # copy data to tmp
+    shutil.copytree(path_from, tmp_path, dirs_exist_ok=True)
+
+    clim2parquet.clim_to_parquet("CHIRPS", tmp_path, tmp_path)
+    file_name = clim2parquet.tools._make_output_names("CHIRPS", admin_level)
+    assert (tmp_path / file_name).exists()
+
+    clim2parquet.clim_to_parquet("ERA5_mean", tmp_path, tmp_path)
+    file_name = clim2parquet.tools._make_output_names("ERA5_mean", admin_level)
+    assert (tmp_path / file_name).exists()
 
 
 # Tests for errors

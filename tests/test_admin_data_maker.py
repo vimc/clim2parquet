@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 import clim2parquet
 
@@ -18,3 +19,10 @@ def test_admin_unit_uid_maker() -> None:
 
     assert isinstance(data, pd.DataFrame)
     assert all(i in data.columns for i in col_names)
+
+
+def test_admin_unit_uid_errors() -> None:
+    """Test error from admin unit UID maker."""
+    path_from_bad = Path("tests/test-data/ABC/")
+    with pytest.raises(Exception, match=r"not found or is not a directory"):
+        clim2parquet.make_admin_unit_ids(path_from_bad)
