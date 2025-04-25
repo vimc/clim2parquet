@@ -319,7 +319,11 @@ def _add_admin_data(
 
 
 def _files_to_parquet(
-    files: list[Path], to: str, admin_level: int, gadm_version: str
+    files: list[Path],
+    to: str,
+    admin_level: int,
+    admin_unit_uids: pd.DataFrame,
+    gadm_version: str,
 ) -> None:
     """
     Convert country data from CSV to Parquet file.
@@ -331,6 +335,9 @@ def _files_to_parquet(
     to : str
         Path and filename to output the data. Currently `str` as `pyarrow`
         does not support `pathlib.Path`.
+    admin_unit_uids : pd.DataFrame
+        A Pandas DataFrame containing the admin unit UIDs. This is used to
+        map the admin data to the correct UIDs.
 
     Returns
     -------
@@ -343,7 +350,9 @@ def _files_to_parquet(
     for file in files:
         df = pd.read_csv(file, sep=",", header=0)
         _add_admin_data(
-            df, _get_admin_data(str(file), admin_level, gadm_version)
+            df,
+            _get_admin_data(str(file), admin_level, gadm_version),
+            admin_unit_uids,
         )
         data_list.append(df)
 
