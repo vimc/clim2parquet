@@ -18,7 +18,7 @@ console_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
 logger.addHandler(console_handler)
 
 
-def _get_data_info() -> pd.DataFrame:
+def _data_source_info() -> pd.DataFrame:
     """
     Get climate data source information as a Pandas DataFrame.
 
@@ -157,7 +157,7 @@ def _find_clim_files(
     files = list(dir_from.iterdir())  # NOTE: returns full filepath
 
     # get regex to search directory for data files
-    data_info = _get_data_info()
+    data_info = _data_source_info()
     data_pattern = data_info.loc[
         data_info["data_source"] == data_source, "data_regex"
     ].item()
@@ -225,7 +225,7 @@ def _make_output_names(data_source: str, admin_level: int) -> str:
         A string for the output file name. Does not contain the output
         directory.
     """
-    data_info = _get_data_info()
+    data_info = _data_source_info()
     data_output_name = data_info.loc[
         data_info["data_source"] == data_source, "data_output_name"
     ].item()
@@ -372,7 +372,7 @@ def _files_to_parquet(
     files: list[Path],
     to: str,
     admin_level: int,
-    admin_unit_uids: pd.DataFrame,
+    admin_unit_ids: pd.DataFrame,
     gadm_version: str,
 ) -> None:
     """
@@ -385,7 +385,7 @@ def _files_to_parquet(
     to : str
         Path and filename to output the data. Currently `str` as `pyarrow`
         does not support `pathlib.Path`.
-    admin_unit_uids : pd.DataFrame
+    admin_unit_ids : pd.DataFrame
         A Pandas DataFrame containing the admin unit UIDs. This is used to
         map the admin data to the correct UIDs.
 
@@ -399,10 +399,10 @@ def _files_to_parquet(
     # NOTE: function will error if there are no files
     for file in files:
         df = pd.read_csv(file, sep=",", header=0)
-        _add_admin_data(
+        _add_admin_unit_id(
             df,
             _get_admin_data(str(file), admin_level, gadm_version),
-            admin_unit_uids,
+            admin_unit_ids,
         )
         data_list.append(df)
 
