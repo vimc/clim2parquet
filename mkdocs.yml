@@ -40,6 +40,7 @@ theme:
 
 nav:
   - "Home": index.md
+  - "Admin unit identifiers": admin_unit_index.md
   - "Reference": reference.md
   - "News": CHANGELOG.md
 

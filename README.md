@@ -55,9 +55,10 @@ We currently support finding and converting the following climate data sources:
 
 ## Package data
 
-This package includes some data accessible via a package function. To generate the raw data file read and provided by this function, run the script `data-raw/data_sources.py`. The recommended way of doing this is using the [`uv` package manager](https://docs.astral.sh/uv/).
+This package includes some data accessible via a package function. To generate the raw data file read and provided by this function, run the scripts in `data-raw`. The recommended way of doing this is using the [`uv` package manager](https://docs.astral.sh/uv/).
 
 ```sh
+# to prepare data on climate data sources
 uv run data-raw/data_sources.py
 ```
 
