@@ -256,8 +256,8 @@ def _get_country_code(filename: str, gadm_version: str) -> str:
         match_0 = match.group(0)
         match_0 = match_0.strip(f"_{gadm_version}")
         if match_0 not in _data_country_codes():
-            warn_cc_not_recog = f"Country code of {filename} not recognised."
-            raise Exception(warn_cc_not_recog)
+            err_cc_not_recog = f"Country code of {filename} not recognised."
+            raise Exception(err_cc_not_recog)
         else:
             return match_0  # type: ignore
     else:
