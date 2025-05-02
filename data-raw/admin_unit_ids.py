@@ -25,7 +25,7 @@ source_file = "gadm_410.gpkg"  # Not included in this pkg as too large
 source_file = source_path / source_file
 
 dest_path = Path("src/clim2parquet/data")
-file_name = "admin_units.csv"
+file_name = "admin_units.parquet"
 dest_file = dest_path / file_name
 
 # check layers; expected 1 layer for all admin levels in this dataset
@@ -63,9 +63,9 @@ data = data[colnames]
 
 data = data.reset_index(drop=True)
 
-# assign ids and save
+# assign ids and save as parquet file, approx 25% smaller
 data["admin_unit_id"] = range(len(data))
-data.to_csv(dest_file, index=False)
+data.to_parquet(dest_file, index=False)
 
 ## save country codes for easy access ##
 dest_file = dest_path / "country_codes.csv"
