@@ -233,38 +233,36 @@ def _make_output_names(data_source: str, admin_level: int) -> str:
     return f"{data_output_name}_admin_{admin_level}.parquet"
 
 
-def _pad_admin_levels(
-    admin_data: list[int], admin_level: int, pad_len: int = 3
-) -> list[int]:
+def _get_country_code(filename: str, gadm_version: str) -> str:
     """
-    Pad admin data list to a fixed length.
+    Get the ISO 3 character country code from a filename.
 
     Parameters
     ----------
-    admin_data : list[int]
-        A list of integers representing the GADM admin levels. Note that this
-        function expects that the GID code at the end has been removed.
-    admin_level: int
-        The inferred admin level.
-    pad_len : int
-        The padded length of the list. Default is 3.
-        The list is padded with zeros to the right if the inferred admin level
-        is 0, and with a single zero to the left and zeros to the right if the
-        inferred admin level is 1 -- 3.
+    filename : str
+        The filename of the data file.
+    gadm_version : str
+        GADM version as a string. No default as this is passed from higher level
+        functions.
+
+    Returns
+    -------
+    str
+        The ISO 3 character country code extracted from the filename.
     """
-    admin_0_identifier = 0
-
-    # admin 0 and admin 1 have similar signatures
-    zero_counter = 1 if admin_level > 0 else 0
-    pad_len = pad_len + 1 if admin_level == 0 else pad_len
-
-    admin_data = (
-        [admin_0_identifier] * zero_counter
-        + admin_data
-        + [0] * (pad_len - len(admin_data))
-    )
-
-    return admin_data
+    pattern = rf"([A-Z]{{3}})_{gadm_version}"
+    match = re.search(pattern, filename)
+    if match:
+        match_0 = match.group(0)
+        match_0 = match_0.strip(f"_{gadm_version}")
+        if match_0 not in _data_country_codes():
+            warn_cc_not_recog = f"Country code of {filename} not recognised."
+            raise Exception(warn_cc_not_recog)
+        else:
+            return match_0  # type: ignore
+    else:
+        err_cc_not_found = "Country code not found in filename."
+        raise Exception(err_cc_not_found)
 
 
 def _get_admin_data(
