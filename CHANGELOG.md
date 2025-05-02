@@ -11,4 +11,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Added online documentation build using `mkdocs` and related packages
 
-- Added function `make_admin_unit_ids` to create a directory specific index of administrative units and identifiers.
+- Added script under `data-raw` to make a package-specific global index of administrative units and identifiers for use in data preparation.
