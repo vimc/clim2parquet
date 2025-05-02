@@ -267,7 +267,7 @@ def _get_country_code(filename: str, gadm_version: str) -> str:
 
 def _get_admin_data(
     filename: str, admin_level: int, gadm_version: str
-) -> list[int]:
+) -> list[str | None]:
     """
     Get GADM admin-level and admin-unit information from a filename.
 
@@ -283,46 +283,46 @@ def _get_admin_data(
 
     Returns
     -------
-    list[int]
-        A list of 5 integers. For GADM level 0 (country level), the list
-        `[0, 0, 0, 0 1]` is returned indicating country level data and a GADM
-        identification code (GID code) version of 1.0. No other admin units
-        have a numeric identifier of 0.
+    list[str|None]
+        A list of 4 elements, where the first element is always a string, but
+        remaining elements may be `None`.
+        Each element represents the `GID_X` identifier constructed from the
+        filename, where `X` is in `[0, 1, 2, 3]` for the allowed GADM levels.
 
-        For all levels > 0, a list where the last element
-        is the GID code version. Of the preceding N elements, the i-th element
-        is the numeric identifier of the i-th admin level. The first element is
-        always 0, indicating the country level.
+        Level 0 is represented as `ABC` for the ISO 3 character country code,
+        while levels 1 - 3 are represented as `ABC.1.2.3_Z` respectively.
+        The appended `Z` is the GID_code, which is also inferred from the file
+        name.
 
-        For example, the file `'*_v410_1_2_3_4_clim.csv'` would return
-        [0, 1, 2, 3, 4], where 1, 2, and 3 are the numeric identifiers of
-        the 1st, 2nd, and 3rd admin levels, respectively, and 4 is the GID code
-        version. 0 is the country level identifier.
+        **Note that** the GID code for all admin levels is taken from the file
+        name.
     """
-    pattern = _get_level_pattern(admin_level, gadm_version)
-    match = re.search(pattern, filename)
+    level_pattern = _get_level_pattern(admin_level, gadm_version)
+    level_match = re.search(level_pattern, filename)
 
-    match_0 = match.group(0)  # type: ignore
+    country_code = _get_country_code(filename, gadm_version)
+
+    match_0 = level_match.group(0)  # type: ignore
     match_0 = match_0.strip(gadm_version)
     match_0 = match_0.strip("_")
 
-    inferred_admin_level = 0
+    # return a list of admin unit identifiers that match GADM and the index file
     if match_0:
         admin_data = re.findall(r"\d+", match_0)
-        admin_data = [int(i) for i in admin_data]
-        gid_code = admin_data[-1]
-        admin_data = admin_data[:-1]  # strip GID code
-        inferred_admin_level = len(admin_data)
-    else:
-        # admin level is 0 (country)
-        # GID code version assumed to be 1
-        admin_data = [0]
-        gid_code = 1
+        gid_code = admin_data[-1]  # removed here and re-added later
+        admin_data = admin_data[:-1]
 
-    # process into a 5-element list, filling zeros for lower admin units
-    # and adding GID code
-    admin_data = _pad_admin_levels(admin_data, inferred_admin_level)
-    admin_data.append(gid_code)
+        admin_data = [".".join(admin_data[: i + 1]) for i in range(admin_level)]
+        admin_data = [f"{country_code}.{i}_{gid_code}" for i in admin_data]
+        admin_data = [country_code, *admin_data]
+    else:
+        admin_data = [country_code]
+
+    # pad with None if len < 4
+    needed_len = len(_gadm_levels())
+    if len(admin_data) < needed_len:
+        pad_list = [None] * (needed_len - len(admin_data))
+        admin_data = [*admin_data, *pad_list]
 
     return admin_data
 
