@@ -328,7 +328,9 @@ def _get_admin_data(
 
 
 def _add_admin_unit_id(
-    data: pd.DataFrame, admin_data: list[int], admin_unit_ids: pd.DataFrame
+    data: pd.DataFrame,
+    admin_data: list[str | None],
+    admin_unit_ids: pd.DataFrame,
 ) -> None:
     """
     Add admin unit identifier to a dataframe of climate data.
@@ -337,8 +339,8 @@ def _add_admin_unit_id(
     ----------
     data : pd.DataFrame
         A Pandas DataFrame containing climate data.
-    admin_data : list[int]
-        A list of integers with GADM admin-unit data and GID code version,
+    admin_data : list[str|None]
+        A list of strings and `None` with GADM admin-unit data,
         typically extracted from the filename using `_get_admin_data()`.
     admin_unit_ids : pd.DataFrame
         A Pandas DataFrame containing the admin unit identifiers, returned from
