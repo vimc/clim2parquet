@@ -173,3 +173,7 @@ cython_debug/
 
 # ignore scratch
 scratch.py
+scratch
+
+# spatial data ignored as it is too large
+data-spatial
