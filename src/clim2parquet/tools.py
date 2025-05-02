@@ -327,11 +327,11 @@ def _get_admin_data(
     return admin_data
 
 
-def _add_admin_data(
-    data: pd.DataFrame, admin_data: list[int], admin_unit_uids: pd.DataFrame
+def _add_admin_unit_id(
+    data: pd.DataFrame, admin_data: list[int], admin_unit_ids: pd.DataFrame
 ) -> None:
     """
-    Add GADM admin-level and admin-unit data to a dataframe of climate data.
+    Add admin unit identifier to a dataframe of climate data.
 
     Parameters
     ----------
@@ -340,9 +340,9 @@ def _add_admin_data(
     admin_data : list[int]
         A list of integers with GADM admin-unit data and GID code version,
         typically extracted from the filename using `_get_admin_data()`.
-    admin_unit_uids : pd.DataFrame
-        A Pandas DataFrame containing the admin unit UIDs. This is used to
-        map the admin data to the correct UIDs.
+    admin_unit_ids : pd.DataFrame
+        A Pandas DataFrame containing the admin unit identifiers, returned from
+        `_data_admin_unit_ids()`.
 
     Returns
     -------
@@ -350,18 +350,22 @@ def _add_admin_data(
         Called only for the side effect of modifying the input `DataFrame`.
         Note that this function modifies the input `DataFrame` in place.
     """
-    # filter admin_data dataframe for values in admin_data
-    admin_unit_uids = admin_unit_uids[
-        (admin_unit_uids["admin_unit_0"] == admin_data[0])
-        & (admin_unit_uids["admin_unit_1"] == admin_data[1])
-        & (admin_unit_uids["admin_unit_2"] == admin_data[2])
-        & (admin_unit_uids["admin_unit_3"] == admin_data[3])
-        & (admin_unit_uids["gid_code_version"] == admin_data[4])
-    ]
+    # prepare boolean mask for admin unit ids dataframe
+    colnames = [f"GID_{i}" for i in _gadm_levels()]
 
-    admin_unit_uid = admin_unit_uids["uid"].values[0]
+    condition = pd.DataFrame(
+        {
+            col: (admin_unit_ids[col] == val)
+            | (pd.isna(admin_unit_ids[col]) & pd.isna(val))
+            for col, val in zip(colnames, admin_data)
+        }
+    )
+
+    admin_unit = admin_unit_ids[condition.all(axis=1)]
+    admin_unit_data_id = admin_unit["admin_unit_id"].values[0]
+
     # NOTE: modification in place
-    data["admin_unit_uid"] = admin_unit_uid
+    data["admin_unit_id"] = admin_unit_data_id
 
 
 def _files_to_parquet(
