@@ -36,6 +36,54 @@ def _get_data_info() -> pd.DataFrame:
         return pd.read_csv(f, dtype=str)
 
 
+def _data_admin_unit_ids() -> pd.DataFrame:
+    """
+    Get package data on admin unit identifiers as a Pandas DataFrame.
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame with the admin unit identifiers.
+
+        The DataFrame has 9 columns corresponding to `GID_X` and `NAME_X` where
+        `X` can be one of `[0, 1, 2, 3]`. These columns hold values taken from
+        GADM spatial data.
+
+        An additional integer column `admin_unit_id` gives the
+        admin unit identifier.
+
+        See the package data preparation script `data-raw/admin_unit_ids.py` for
+        how this data is prepared, and see the package documentation on how this
+        data relates to GADM admin unit identifiers.
+    """
+    with (
+        importlib.resources.files("clim2parquet.data")
+        .joinpath("admin_units.parquet")
+        .open("rb")
+    ) as f:
+        return pd.read_parquet(f)
+
+
+def _data_country_codes() -> list[str]:
+    """
+    Get ISO 3 character country codes from package data.
+
+    Returns
+    -------
+    list[str]
+        A list of ISO 3 character country codes. This list is formed by taking
+        the `GID_0` (country level identifier) from admin unit identifier data
+        prepared in `data-raw/admin_unit_ids.py`.
+    """
+    with (
+        importlib.resources.files("clim2parquet.data")
+        .joinpath("country_codes.csv")
+        .open("r", encoding="utf8")
+    ) as f:
+        cc_df = pd.read_csv(f, dtype=str)
+        return cc_df["GID_0"].tolist()
+
+
 def _get_level_pattern(admin_level: int, gadm_version: str) -> str:
     """
     Get file naming pattern for a GADM admin level.
