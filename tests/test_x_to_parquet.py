@@ -80,7 +80,7 @@ def test_correct_admin_unit(tmp_path: Path) -> None:
     input_filename = clim2parquet.tools._find_clim_files(
         path_from, "ERA5_RH", admin_level, gadm_version
     )
-    input_filename = str(input_filename[0])
+    input_filename_str = str(input_filename[0])
     dest_filename = clim2parquet.tools._make_output_names(
         "ERA5_RH", admin_level
     )
@@ -88,7 +88,7 @@ def test_correct_admin_unit(tmp_path: Path) -> None:
     data = pq.read_table(tmp_path / dest_filename)
 
     admin_data = clim2parquet.tools._get_admin_data(
-        input_filename, admin_level, gadm_version
+        input_filename_str, admin_level, gadm_version
     )
     admin_unit_data = clim2parquet.tools._data_admin_unit_ids()
 
