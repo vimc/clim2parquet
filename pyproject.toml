@@ -26,7 +26,6 @@ classifiers = [
 ]
 dependencies = [
   "pandas",
-  "pathlib>=1.0.1",
   "pyarrow",
   "pytest>=8.3.5",
 ]
