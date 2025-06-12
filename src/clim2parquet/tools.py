@@ -410,4 +410,4 @@ def _files_to_parquet(
 
     df = pd.concat(data_list)
     table = pa.Table.from_pandas(df, preserve_index=False)
-    pq.write_table(table, to)
+    pq.write_table(table, to, compression = "zstd", compression_level = 9)
