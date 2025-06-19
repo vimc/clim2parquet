@@ -177,3 +177,12 @@ def test_clim_to_parquet_errors() -> None:
         assert len(w) == 1
         assert issubclass(w[-1].category, Warning)
         assert f"Found no {data_sources} files" in str(w[-1].message)
+
+
+# Test for GID code mismatch errors
+def test_gid_mismatch() -> None:
+    """Check that a GID code mismatch throws an informative error."""
+    path_from = Path("tests/test-data/ABC/")
+    admin_level = 3
+    with pytest.raises(Exception, match=r"GID code mismatch"):
+        clim2parquet.clim_to_parquet("CHIRPS", path_from, ".", admin_level)
