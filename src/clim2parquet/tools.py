@@ -364,6 +364,18 @@ def _add_admin_unit_id(
     )
 
     admin_unit = admin_unit_ids[condition.all(axis=1)]
+
+    # catch errors arising from GID code mismatches
+    # assumed GID code for lower (larger, e.g. GID_1) levels may not be correct
+    # prefer error here rather than a partial match
+    # unclear how GADM global data file differs from individual country/level
+    # files
+    nrow_admin_unit = admin_unit.shape[0]
+    if nrow_admin_unit == 0:
+        country_code = admin_data[0]
+        err_gid_mismatch = f"GID code mismatch for country '{country_code}'."
+        raise Exception(err_gid_mismatch)
+
     admin_unit_data_id = admin_unit["admin_unit_id"].values[0]
 
     # NOTE: modification in place
