@@ -148,11 +148,15 @@ def test_output_format_lvl_n(tmp_path: Path) -> None:
 # Tests for errors
 def test_clim_to_parquet_errors() -> None:
     """Check for errors in clim_to_parquet()."""
-    with pytest.raises(ValueError, match=r"One or more of `data_source`"):
+    with pytest.raises(
+        clim2parquet.DataSourceError, match=r"One or more of `data_source`"
+    ):
         clim2parquet.clim_to_parquet("dummy_option", ".", ".")
 
     excess_admin_level = 99
-    with pytest.raises(ValueError, match=r"One or more of `admin_level`"):
+    with pytest.raises(
+        clim2parquet.AdminLevelError, match=r"One or more of `admin_level`"
+    ):
         clim2parquet.clim_to_parquet(
             "CHIRPS", ".", ".", admin_level=excess_admin_level
         )

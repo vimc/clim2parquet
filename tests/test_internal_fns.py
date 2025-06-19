@@ -12,8 +12,12 @@ def test_country_code() -> None:
     filename = f"{cc}_{gadm_version}"
 
     with pytest.raises(
-        Exception, match=rf"Country code of {filename} not recog"
+        clim2parquet.tools.CountryNotFoundError,
+        match=rf"Country code of {filename} not recog",
     ):
         clim2parquet.tools._get_country_code(filename, gadm_version)
-    with pytest.raises(Exception, match=r"Country code not found in filename"):
+    with pytest.raises(
+        clim2parquet.tools.CountryNotFoundError,
+        match=r"Country code not found in filename",
+    ):
         clim2parquet.tools._get_country_code(gadm_version, gadm_version)

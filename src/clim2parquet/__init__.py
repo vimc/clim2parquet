@@ -20,6 +20,18 @@ from typing import Optional
 from clim2parquet import tools
 
 
+class DataSourceError(ValueError):
+    """Custom error for when a climate data source is not available."""
+
+    pass
+
+
+class AdminLevelError(ValueError):
+    """Custom error for when a GADM admin level is not available."""
+
+    pass
+
+
 def get_data_names() -> list[str]:
     """
     Get data source names.
@@ -102,12 +114,12 @@ def clim_to_parquet(  # noqa: C901
     if not all(d in get_data_names() for d in data_source):
         err_bad_clim = "One or more of `data_source` are not available. \
             Run `get_data_names()` to get available data names."
-        raise ValueError(err_bad_clim)
+        raise DataSourceError(err_bad_clim)
 
     if not all(i in tools._gadm_levels() for i in admin_level):
         err_bad_admin = "One or more of `admin_level` are not available. \
             Supported levels are: 0, 1, 2, 3."
-        raise ValueError(err_bad_admin)
+        raise AdminLevelError(err_bad_admin)
 
     if gadm_version not in tools._gadm_versions():
         err_bad_gadm = "GADM version not available. Only version 4.1.0 is\

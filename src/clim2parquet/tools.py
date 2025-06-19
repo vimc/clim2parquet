@@ -18,6 +18,12 @@ console_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
 logger.addHandler(console_handler)
 
 
+class CountryNotFoundError(KeyError):
+    """Custom error for when a country code is not found in the data source."""
+
+    pass
+
+
 def _data_source_info() -> pd.DataFrame:
     """
     Get climate data source information as a Pandas DataFrame.
@@ -257,12 +263,12 @@ def _get_country_code(filename: str, gadm_version: str) -> str:
         match_0 = match_0.strip(f"_{gadm_version}")
         if match_0 not in _data_country_codes():
             err_cc_not_recog = f"Country code of {filename} not recognised."
-            raise Exception(err_cc_not_recog)
+            raise CountryNotFoundError(err_cc_not_recog)
         else:
             return match_0  # type: ignore
     else:
         err_cc_not_found = "Country code not found in filename."
-        raise Exception(err_cc_not_found)
+        raise CountryNotFoundError(err_cc_not_found)
 
 
 def _get_admin_data(
