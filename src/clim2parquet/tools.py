@@ -336,6 +336,7 @@ def _get_admin_data(
 def _add_admin_unit_id(
     data: pd.DataFrame,
     admin_data: list[str | None],
+    admin_level: int,
     admin_unit_ids: pd.DataFrame,
 ) -> None:
     """
@@ -348,6 +349,8 @@ def _add_admin_unit_id(
     admin_data : list[str|None]
         A list of strings and `None` with GADM admin-unit data,
         typically extracted from the filename using `_get_admin_data()`.
+    admin_level: int
+        An integer value for the GADM admin level. May be 0 -- 3.
     admin_unit_ids : pd.DataFrame
         A Pandas DataFrame containing the admin unit identifiers, returned from
         `_data_admin_unit_ids()`.
@@ -359,7 +362,10 @@ def _add_admin_unit_id(
         Note that this function modifies the input `DataFrame` in place.
     """
     # prepare boolean mask for admin unit ids dataframe
-    colnames = [f"GID_{i}" for i in _gadm_levels()]
+    max_level = len(_gadm_levels())
+    match_levels = list(range(admin_level, max_level))
+    colnames = [f"GID_{i}" for i in match_levels]
+    admin_data = [admin_data[i] for i in match_levels]
 
     condition = pd.DataFrame(
         {
@@ -369,19 +375,8 @@ def _add_admin_unit_id(
         }
     )
 
+    # new code should ensure that there are no GID code mismatches
     admin_unit = admin_unit_ids[condition.all(axis=1)]
-
-    # catch errors arising from GID code mismatches
-    # assumed GID code for lower (larger, e.g. GID_1) levels may not be correct
-    # prefer error here rather than a partial match
-    # unclear how GADM global data file differs from individual country/level
-    # files
-    nrow_admin_unit = admin_unit.shape[0]
-    if nrow_admin_unit == 0:
-        country_code = admin_data[0]
-        err_gid_mismatch = f"GID code mismatch for country '{country_code}'."
-        raise Exception(err_gid_mismatch)
-
     admin_unit_data_id = admin_unit["admin_unit_id"].values[0]
 
     # NOTE: modification in place
@@ -422,6 +417,7 @@ def _files_to_parquet(
         _add_admin_unit_id(
             df,
             _get_admin_data(str(file), admin_level, gadm_version),
+            admin_level,
             admin_unit_ids,
         )
         data_list.append(df)

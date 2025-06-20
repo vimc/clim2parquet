@@ -184,9 +184,15 @@ def test_clim_to_parquet_errors() -> None:
 
 
 # Test for GID code mismatch errors
-def test_gid_mismatch() -> None:
-    """Check that a GID code mismatch throws an informative error."""
+def test_no_gid_mismatch(tmp_path: Path) -> None:
+    """Check that there are no GID code mismatches."""
     path_from = Path("tests/test-data/ABC/")
     admin_level = 3
-    with pytest.raises(Exception, match=r"GID code mismatch"):
-        clim2parquet.clim_to_parquet("CHIRPS", path_from, ".", admin_level)
+    clim2parquet.clim_to_parquet("CHIRPS", path_from, tmp_path, admin_level)
+    file_name = clim2parquet.tools._make_output_names("CHIRPS", admin_level)
+    assert (tmp_path / file_name).exists()
+
+    admin_level = 2
+    clim2parquet.clim_to_parquet("CHIRPS", path_from, tmp_path, admin_level)
+    file_name = clim2parquet.tools._make_output_names("CHIRPS", admin_level)
+    assert (tmp_path / file_name).exists()
