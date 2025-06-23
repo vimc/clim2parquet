@@ -148,11 +148,15 @@ def test_output_format_lvl_n(tmp_path: Path) -> None:
 # Tests for errors
 def test_clim_to_parquet_errors() -> None:
     """Check for errors in clim_to_parquet()."""
-    with pytest.raises(ValueError, match=r"One or more of `data_source`"):
+    with pytest.raises(
+        clim2parquet.DataSourceError, match=r"One or more of `data_source`"
+    ):
         clim2parquet.clim_to_parquet("dummy_option", ".", ".")
 
     excess_admin_level = 99
-    with pytest.raises(ValueError, match=r"One or more of `admin_level`"):
+    with pytest.raises(
+        clim2parquet.AdminLevelError, match=r"One or more of `admin_level`"
+    ):
         clim2parquet.clim_to_parquet(
             "CHIRPS", ".", ".", admin_level=excess_admin_level
         )
@@ -177,3 +181,18 @@ def test_clim_to_parquet_errors() -> None:
         assert len(w) == 1
         assert issubclass(w[-1].category, Warning)
         assert f"Found no {data_sources} files" in str(w[-1].message)
+
+
+# Test for GID code mismatch errors
+def test_no_gid_mismatch(tmp_path: Path) -> None:
+    """Check that there are no GID code mismatches."""
+    path_from = Path("tests/test-data/ABC/")
+    admin_level = 3
+    clim2parquet.clim_to_parquet("CHIRPS", path_from, tmp_path, admin_level)
+    file_name = clim2parquet.tools._make_output_names("CHIRPS", admin_level)
+    assert (tmp_path / file_name).exists()
+
+    admin_level = 2
+    clim2parquet.clim_to_parquet("CHIRPS", path_from, tmp_path, admin_level)
+    file_name = clim2parquet.tools._make_output_names("CHIRPS", admin_level)
+    assert (tmp_path / file_name).exists()

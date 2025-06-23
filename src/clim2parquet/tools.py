@@ -18,6 +18,12 @@ console_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
 logger.addHandler(console_handler)
 
 
+class CountryNotFoundError(KeyError):
+    """Custom error for when a country code is not found in the data source."""
+
+    pass
+
+
 def _data_source_info() -> pd.DataFrame:
     """
     Get climate data source information as a Pandas DataFrame.
@@ -257,12 +263,12 @@ def _get_country_code(filename: str, gadm_version: str) -> str:
         match_0 = match_0.strip(f"_{gadm_version}")
         if match_0 not in _data_country_codes():
             err_cc_not_recog = f"Country code of {filename} not recognised."
-            raise Exception(err_cc_not_recog)
+            raise CountryNotFoundError(err_cc_not_recog)
         else:
             return match_0  # type: ignore
     else:
         err_cc_not_found = "Country code not found in filename."
-        raise Exception(err_cc_not_found)
+        raise CountryNotFoundError(err_cc_not_found)
 
 
 def _get_admin_data(
@@ -330,6 +336,7 @@ def _get_admin_data(
 def _add_admin_unit_id(
     data: pd.DataFrame,
     admin_data: list[str | None],
+    admin_level: int,
     admin_unit_ids: pd.DataFrame,
 ) -> None:
     """
@@ -342,6 +349,8 @@ def _add_admin_unit_id(
     admin_data : list[str|None]
         A list of strings and `None` with GADM admin-unit data,
         typically extracted from the filename using `_get_admin_data()`.
+    admin_level: int
+        An integer value for the GADM admin level. May be 0 -- 3.
     admin_unit_ids : pd.DataFrame
         A Pandas DataFrame containing the admin unit identifiers, returned from
         `_data_admin_unit_ids()`.
@@ -353,7 +362,10 @@ def _add_admin_unit_id(
         Note that this function modifies the input `DataFrame` in place.
     """
     # prepare boolean mask for admin unit ids dataframe
-    colnames = [f"GID_{i}" for i in _gadm_levels()]
+    max_level = len(_gadm_levels())
+    match_levels = list(range(admin_level, max_level))
+    colnames = [f"GID_{i}" for i in match_levels]
+    admin_data = [admin_data[i] for i in match_levels]
 
     condition = pd.DataFrame(
         {
@@ -363,6 +375,7 @@ def _add_admin_unit_id(
         }
     )
 
+    # new code should ensure that there are no GID code mismatches
     admin_unit = admin_unit_ids[condition.all(axis=1)]
     admin_unit_data_id = admin_unit["admin_unit_id"].values[0]
 
@@ -404,6 +417,7 @@ def _files_to_parquet(
         _add_admin_unit_id(
             df,
             _get_admin_data(str(file), admin_level, gadm_version),
+            admin_level,
             admin_unit_ids,
         )
         data_list.append(df)
