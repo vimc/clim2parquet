@@ -197,7 +197,7 @@ def _gadm_levels() -> list[int]:
     list[int]
         A list of integers representing the supported GADM admin levels.
     """
-    return [0, 1, 2, 3]
+    return [0, 1, 2, 3, 4]
 
 
 def _gadm_versions() -> list[str]:
